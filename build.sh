@@ -8,9 +8,15 @@ if [[ $URL == "" ]]; then
 fi
 
 while [[ $URL != "" ]]; do
-    echo $URL
     echo $URL > .url
-    content=$(curl -s $URL)
+
+    exitCode=1
+    while [[ $exitCode != 0 ]]; do
+        content=$(curl -s $URL)
+        exitCode=$?
+        echo "$exitCode - $URL"
+    done
+
     URL=$(
         echo $content | \
         grep -oE '"next":"https://registry.hub.docker.com/v2/[^"]+"' | \
@@ -27,9 +33,15 @@ while [[ $URL != "" ]]; do
         grep -v 'wheezy'
     )
     for tag in $tags; do
-        echo $tag
+        exitCode=1
+        while [[ $exitCode != 0 ]]; do
+            content=$(curl -s https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag)
+            exitCode=$?
+            echo "$exitCode - https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag"
+        done
+
         digestCurrent=$(
-            curl -s https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag | \
+            echo $content | \
             grep -oE '"digest":"[^"]+"' | \
             sed -e 's/^"digest":"//' | \
             sed -e 's/"$//'
