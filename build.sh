@@ -35,7 +35,7 @@ while [[ $URL != "" ]]; do
             sed -e 's/"$//'
         )
         digestOld=$(cat hashes/$tag 2> /dev/null)
-        if [[ $digestCurrent != $digestOld ]]; then
+        if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]]; then
             docker pull node:$tag
             docker pull satantime/puppeteer-node:$tag
             echo "FROM node:${tag}" > Dockerfile && \
