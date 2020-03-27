@@ -55,9 +55,9 @@ while [[ $URL != "" ]]; do
             docker build . -t satantime/puppeteer-node:$tag && \
             docker push satantime/puppeteer-node:$tag && \
             rm Dockerfile && \
+            printf '%s\n' $digestCurrent > hashes/$tag && \
             git add --all && \
-            git commit -m "Update on $(date +%Y-%m-%d)" && \
-            printf '%s\n' $digestCurrent > hashes/$tag
+            git commit -m "Update of ${tag} on $(date +%Y-%m-%d)" && \
             sleep 0;
         fi
         sleep 0;
