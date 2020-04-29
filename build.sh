@@ -44,7 +44,8 @@ while [[ $URL != "" ]]; do
             echo $content | \
             grep -oE '"digest":"[^"]+"' | \
             sed -e 's/^"digest":"//' | \
-            sed -e 's/"$//'
+            sed -e 's/"$//' && \
+            md5 -q Dockerfile.template
         )
         digestOld=$(cat hashes/$tag 2> /dev/null)
         if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]]; then
