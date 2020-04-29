@@ -1,8 +1,9 @@
-hashes
 .dockerignore
+.git
 .gitignore
 .url
-build.sh
 Docker.template
 LICENSE
 README.md
+build.sh
+hashes
