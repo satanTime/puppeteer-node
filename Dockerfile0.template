@@ -1,6 +1,9 @@
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        apt-transport-https \
         ca-certificates \
+    && \
+    apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys AA8E81B4331F7F50 && \
+    apt-get update && apt-get install -y --no-install-recommends \
         fonts-liberation \
         gconf-service \
         libappindicator1 \
@@ -39,4 +42,7 @@ RUN apt-get update && \
         lsb-release \
         wget \
         xdg-utils \
-        && rm -rf /var/lib/apt/lists/*
+    && \
+    apt-get remove -y apt-transport-https && \
+    apt-get -y autoremove && apt-get -y autoclean && \
+    rm -rf /var/lib/apt/lists/*

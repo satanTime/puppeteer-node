@@ -40,25 +40,37 @@ while [[ $URL != "" ]]; do
             echo "$exitCode - https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag"
         done
 
+        template=''
+        version=0
+        versionMax=$(echo $tag | grep -oE '^\d+')
+        while [[ "$version" -le "$versionMax" ]];
+        do
+            if [[ -f "Dockerfile${version}.template" ]]; then
+                template="Dockerfile${version}.template"
+            fi
+            version=$((version + 1))
+        done
+        echo "Dockerfile: $template"
+
         digestCurrent=$(
             echo $content | \
             grep -oE '"digest":"[^"]+"' | \
             sed -e 's/^"digest":"//' | \
             sed -e 's/"$//' && \
-            md5 -q Dockerfile.template
+            echo dockerfile:`md5 -q $template`
         )
         digestOld=$(cat hashes/$tag 2> /dev/null)
         if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]]; then
             docker pull node:$tag
             docker pull satantime/puppeteer-node:$tag
             echo "FROM node:${tag}" > Dockerfile && \
-            cat Dockerfile.template >> Dockerfile && \
+            cat $template >> Dockerfile && \
             docker build . -t satantime/puppeteer-node:$tag && \
             docker push satantime/puppeteer-node:$tag && \
             rm Dockerfile && \
             printf '%s\n' $digestCurrent > hashes/$tag && \
             git add hashes/* && \
-            git commit -m "Update of ${tag} on $(date +%Y-%m-%d)" && \
+            git commit -m "Update of ${tag} on $(date +%Y-%m-%d)" hashes/* && \
             sleep 0;
         fi
         sleep 0;
