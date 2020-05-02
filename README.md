@@ -7,24 +7,38 @@ The image does not contain puppeteer itself because different versions of the we
 specific versions of Chrome Browser. This makes tough providing images with specific node version and puppeteer
 for all webdriver versions.
   
-Therefore which puppeteer to install and to use is up to you, it is just one line of code.
+Therefore, which puppeteer to install and to use is up to you, it is just one line of code.
 
 #### Warnings
 
 * no alpine images
 * should you not find node version you want, please open an issue on https://github.com/satanTime/puppeteer-node/issues
 
-## How to setup continuous integration that executes unit and end to end tests for an Angular 2+ app
+#### Fast match of versions
+| puppeteer | chromedriver  |
+|----------:|--------------:|
+| 3.0.2     | 81.0.4044.69  |
+| 3.0.1     | 81.0.4044.69  |
+| 3.0.0     | 81.0.4044.69  |
+| 2.1.1     | 80.0.3987.106 |
+| 2.1.0     | 80.0.3987.106 |
+| 2.0.0     | 79.0.3945.36  |
+| 1.20.0    | 78.0.3904.105 |
+| 1.19.0    | 77.0.3865.40  |
+| 1.17.0    | 76.0.3809.126 |
+| 1.15.0    | 75.0.3770.140 |
+
+## How to set up continuous integration that executes unit and end to end tests for an Angular 2+ app
 
 ### 1. Install puppeteer as a dev dependency
 
 The first step is to decide which Chromium version (Chrome Browser) you want to use for tests.
 
 Not all version are supported. You need to check puppeteer versions first.
-At the moment of writing the article puppeteer version `2.1.x` works with the version `80.x` of Chromium (Chrome Browser).
+At the moment of writing the article puppeteer version `3.0.x` works with the version `81.x` of Chromium (Chrome Browser).
 Let's proceed with it.
 ```bash
-npm install --save-dev 'puppeteer@~2.1.0'
+npm install --save-dev 'puppeteer@~3.0.2'
 ```
 
 ### 2. Configure webdriver
@@ -32,13 +46,13 @@ npm install --save-dev 'puppeteer@~2.1.0'
 Another news is that the webdriver also needs a specific version of the chromedriver to work with the chosen Chromium.
 
 We need to go to [chromedriver downloads](https://chromedriver.chromium.org/downloads) and to choose a version
-that supports `80.x`. At the moment of writing the article it is `ChromeDriver 80.0.3987.106`.
+that supports `81.x`. At the moment of writing the article it is `ChromeDriver 81.0.4044.69`.
 
 To configure it we need to edit `package.json` and add there a `postinstall` script.
 ```json
 {
     "scripts": {
-        "postinstall": "node_modules/protractor/bin/webdriver-manager update --versions.chrome 80.0.3987.106"
+        "postinstall": "node_modules/protractor/bin/webdriver-manager update --versions.chrome 81.0.4044.69"
     }
 }
 ```
