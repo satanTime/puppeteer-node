@@ -54,6 +54,7 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
         libstdc++6 \
         libx11-6 \
         libx11-xcb1 \
+        libxcb-dri3-0 \
         libxcb1 \
         libxcomposite1 \
         libxcursor1 \
