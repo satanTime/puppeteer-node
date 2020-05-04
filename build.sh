@@ -54,8 +54,7 @@ while [[ $URL != "" ]]; do
             echo "FROM node:${tag}" > Dockerfile && \
             cat Dockerfile.template >> Dockerfile && \
             docker build . -t satantime/puppeteer-node:$tag && \
-            rm Dockerfile && \
-            docker push satantime/puppeteer-node:$tag
+            rm Dockerfile
             code="${?}"
             files=""
             if [[ -f hashes/$tag ]]; then
@@ -76,7 +75,14 @@ while [[ $URL != "" ]]; do
                 git add hashes/$tag.error
                 files="$files hashes/$tag.error"
             fi
-            git commit -m "Update of $tag on $(date +%Y-%m-%d)" $files
+
+            if [[ "${code}" == "0" ]]; then
+                (docker push satantime/puppeteer-node:$tag && \
+                git commit -m "Update of $tag on $(date +%Y-%m-%d)" $files) &
+            fi
+            if [[ "${code}" != "0" ]]; then
+                git commit -m "Error of $tag on $(date +%Y-%m-%d)" $files
+            fi
         fi
         true;
     done
