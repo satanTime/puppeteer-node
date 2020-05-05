@@ -48,7 +48,7 @@ while [[ $URL != "" ]]; do
             echo dockerfile:`md5 -q Dockerfile.template`
         )
         digestOld=$(cat hashes/$tag 2> /dev/null)
-        if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]]; then
+        if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             docker pull node:$tag
             docker pull satantime/puppeteer-node:$tag
             echo "FROM node:${tag}" > Dockerfile && \
@@ -56,32 +56,19 @@ while [[ $URL != "" ]]; do
             docker build . -t satantime/puppeteer-node:$tag && \
             rm Dockerfile
             code="${?}"
-            files=""
-            if [[ -f hashes/$tag ]]; then
-                git rm hashes/$tag
-                files="$files hashes/$tag"
-            fi
             if [[ -f hashes/$tag.error ]]; then
-                git rm hashes/$tag.error
-                files="$files hashes/$tag.error"
+                git rm -f hashes/$tag.error
+            fi
+            if [[ -f "hashes/${tag}@error" ]]; then
+                git rm -f "hashes/${tag}@error"
             fi
             if [[ "${code}" == "0" ]]; then
                 printf '%s\n' $digestCurrent > hashes/$tag
                 git add hashes/$tag
-                files="$files hashes/$tag"
             fi
             if [[ "${code}" != "0" ]]; then
-                printf '%s\n' $digestCurrent > hashes/$tag.error
-                git add hashes/$tag.error
-                files="$files hashes/$tag.error"
-            fi
-
-            if [[ "${code}" == "0" ]]; then
-                (docker push satantime/puppeteer-node:$tag && \
-                git commit -m "Update of $tag on $(date +%Y-%m-%d)" $files) &
-            fi
-            if [[ "${code}" != "0" ]]; then
-                git commit -m "Error of $tag on $(date +%Y-%m-%d)" $files
+                printf '%s\n' $digestCurrent > "hashes/${tag}@error"
+                git add "hashes/${tag}@error"
             fi
         fi
         true;
