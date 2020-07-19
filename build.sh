@@ -48,7 +48,7 @@ while [[ $URL != "" ]]; do
             echo dockerfile:`md5 -q Dockerfile.template`
         )
         digestOld=$(cat hashes/$tag 2> /dev/null)
-        if [[ $digestCurrent != $digestOld ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
+        if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             docker pull node:$tag
             docker pull satantime/puppeteer-node:$tag
             echo "FROM node:${tag}" > Dockerfile && \
