@@ -17,6 +17,8 @@ Therefore, which puppeteer to install and to use is up to you, it is just one li
 #### Fast match of versions
 | puppeteer | chromedriver  |
 |----------:|--------------:|
+| 5.4.x     | 86.0.4240.22  |
+| 5.3.x     | 85.0.4183.38  |
 | 5.2.x     | 85.0.4183.38  |
 | 5.1.x     | 84.0.4147.30  |
 | 5.0.x     | 83.0.4103.39  |
