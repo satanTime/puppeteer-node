@@ -36,7 +36,7 @@ To configure it we need to edit `package.json` and add there a `postinstall` scr
 ```json
 {
     "scripts": {
-        "postinstall": "node_modules/protractor/bin/webdriver-manager update --versions.chrome 86.0.4240.22"
+        "postinstall": "node_modules/protractor/bin/webdriver-manager update --versions.chrome 86.0.4240.22 --gecko=false"
     }
 }
 ```
@@ -157,6 +157,7 @@ jobs:
 
 | puppeteer | chromedriver  |
 |----------:|--------------:|
+| 5.5.x     | 88.0.4324.27  |
 | 5.4.x     | 86.0.4240.22  |
 | 5.3.x     | 85.0.4183.38  |
 | 5.2.x     | 85.0.4183.38  |
