@@ -9,20 +9,20 @@ There are examples for [Bitbucket Pipelines](#configure-bitbucket-pipelines) and
 - [2. Configure webdriver](#2-configure-webdriver)
 - [3. Configure Karma in Angular 2+ app to use puppeteer for CI](#3-configure-karma-in-angular-2-app-to-use-puppeteer-for-ci)
 - [4. Configure Protractor in Angular 2+ app to use puppeteer for CI](#4-configure-protractor-in-angular-2-app-to-use-puppeteer-for-ci)
-- [Configure BitBucket pipelines](#configure-bitbucket-pipelines)
-- [Configure CircleCI](#configure-circleci)
+* [Configure BitBucket pipelines](#configure-bitbucket-pipelines)
+* [Configure CircleCI](#configure-circleci)
+  - [IE11 on CI](#ie11-on-ci)
 - [Fast match of versions](#fast-match-of-versions)
-- [Warnings](#warnings)
 
 ## 1. Install puppeteer as a dev dependency
 
 The first step is to decide which Chromium version (Chrome Browser) you want to use for tests.
 
 Not all version are supported. You need to check puppeteer versions first.
-At the moment of writing the article puppeteer version `5.4.x` works with the version `86.x` of Chromium (Chrome Browser).
+At the moment of writing the article puppeteer version `5.4.x` works with the version `88.x` of Chromium (Chrome Browser).
 Let's proceed with it.
 ```bash
-npm install --save-dev 'puppeteer@~5.4.0'
+npm install --save-dev 'puppeteer@~5.5.0'
 ```
 
 ## 2. Configure webdriver
@@ -30,14 +30,14 @@ npm install --save-dev 'puppeteer@~5.4.0'
 Another news is that the webdriver also needs a specific version of the chromedriver to work with the chosen Chromium.
 
 We need to go to [chromedriver downloads](https://chromedriver.chromium.org/downloads) and to choose a version
-that supports `86.x`. At the moment of writing the article it is `ChromeDriver 86.0.4240.22`.
+that supports `88.x`. At the moment of writing the article it is `ChromeDriver 88.0.4324.27`.
 
 To configure it we need to edit `package.json` and add there a `postinstall` script.
 ```json
 {
-    "scripts": {
-        "postinstall": "node_modules/protractor/bin/webdriver-manager update --versions.chrome 86.0.4240.22 --gecko=false"
-    }
+  "scripts": {
+    "postinstall": "webdriver-manager update --versions.chrome 88.0.4324.27 --gecko=false"
+  }
 }
 ```
 
@@ -45,9 +45,9 @@ The next step is to disable automatic updates of the webdriver when we're execut
 For that we need to add `--webdriver-update=false` flag to `e2e` script in `package.json`.
 ```json
 {
-    "scripts": {
-        "e2e": "ng e2e --webdriver-update=false"
-    }
+  "scripts": {
+    "e2e": "ng e2e --webdriver-update=false"
+  }
 }
 ```
 
@@ -55,25 +55,30 @@ For that we need to add `--webdriver-update=false` flag to `e2e` script in `pack
 
 Update `src/karma.conf.js` with the next changes.
 ```javascript
-process.env.CHROME_BIN = require('puppeteer').executablePath(); // <- important to add
+// important to add
+process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = function(config) {
-    config.set({
-        // ...
-        customLaunchers: {
-            ChromeCi: { // <- you can define a browser configuration, then simply copy the whole section
-                base: 'ChromeHeadless',
-                flags: [
-                    '--headless',
-                    '--disable-gpu',
-                    '--window-size=800,600',
-                    '--no-sandbox', // <- important to add
-                    '--disable-dev-shm-usage', // <- important to add
-                ],
-            },
-        },
-        // ...
-    });
+  config.set({
+    // ...
+    customLaunchers: {
+      // you can define a browser configuration, 
+      // then simply copy the whole section
+      ChromeCi: {
+        base: 'ChromeHeadless',
+        flags: [
+          '--headless',
+          '--disable-gpu',
+          '--window-size=800,600',
+          // important to add
+          '--no-sandbox',
+          // important to add
+          '--disable-dev-shm-usage',
+        ],
+      },
+    },
+    // ...
+  });
 };
 ```
 
@@ -82,21 +87,24 @@ module.exports = function(config) {
 Update `e2e/protractor.conf.js` with the next changes.
 ```javascript
 exports.config = {
-    // ...
-    capabilities: {
-        browserName: 'chrome',
-        chromeOptions: {
-            args: [
-                '--headless',
-                '--disable-gpu',
-                '--window-size=800,600',
-                '--no-sandbox', // <- important to add
-                '--disable-dev-shm-usage', // <- important to add
-            ],
-            binary: require('puppeteer').executablePath(), // <- important to add
-        },
+  // ...
+  capabilities: {
+    browserName: 'chrome',
+    chromeOptions: {
+      args: [
+        '--headless',
+        '--disable-gpu',
+        '--window-size=800,600',
+        // important to add
+        '--no-sandbox',
+        // important to add
+        '--disable-dev-shm-usage',
+      ],
+      // important to add
+      binary: require('puppeteer').executablePath(),
     },
-    // ...
+  },
+  // ...
 };
 ```
 
@@ -106,23 +114,28 @@ An example of `bitbucket-pipelines.yml` how to run unit and e2e tests.
 image: satantime/puppeteer-node:12.16.1-buster # put here version you need
 
 pipelines:
-    default:
-        - step: &Tests
-              name: Tests
-              caches:
-                  - node
-              script:
-                  - npm install
-                  - npm run postinstall
-                  # remove --browsers=ChromeCi if you didn't configure it in karma.conf.js
-                  - npm run test -- --browsers=ChromeCi --no-watch --no-progress
-                  - npm run e2e
-    pull-requests:
-        '**':
-            - step: *Tests
-    branches:
-        '**':
-            - step: *Tests
+  default:
+    - step: &Tests
+        name: Tests
+        caches:
+          - node
+        script:
+          - npm install
+          - npm run postinstall
+          # remove --browsers=ChromeCi,
+          # if you didn't configure it in karma.conf.js
+          - >
+            npm run test --
+            --browsers=ChromeCi
+            --no-watch
+            --no-progress
+          - npm run e2e
+  pull-requests:
+    '**':
+      - step: *Tests
+  branches:
+    '**':
+      - step: *Tests
 ```
 
 ## Configure CircleCI
@@ -130,27 +143,100 @@ An example of `.circleci/config.yml` how to run unit and e2e tests.
 ```yaml
 version: 2.1
 jobs:
-    build:
-        docker:
-            - image: satantime/puppeteer-node:12.16-buster # put here version you need
-        steps:
-            - checkout
-            - restore_cache:
-                  key: cache
-            - run:
-                  name: Install
-                  command: npm install && npm run postinstall
-            - save_cache:
-                  key: cache
-                  paths:
-                      - ./node_modules
-            - run:
-                  name: Unit Tests
-                  # remove --browsers=ChromeCi if you didn't configure it in karma.conf.js
-                  command: npm run test -- --browsers=ChromeCi --no-watch --no-progress
-            - run:
-                  name: End to End Tests
-                  command: npm run e2e
+  build:
+    docker:
+      # put here version you need
+      - image: satantime/puppeteer-node:12.16-buster
+    steps:
+      - checkout
+      - restore_cache:
+          key: cache
+      - run:
+          name: Install
+          command: |
+            if [ ! -d "./node_modules/" ]; then
+              npm ci --no-optional --ignore-scripts && \
+              node ./node_modules/puppeteer/install.js
+            fi
+      - save_cache:
+          key: cache
+          paths:
+            - ./node_modules
+      - run:
+          name: Unit Tests
+          # remove --browsers=ChromeCi,
+          # if you didn't configure it in karma.conf.js
+          command: >
+            npm run test --
+            --browsers=ChromeCi
+            --no-watch
+            --no-progress
+      - run:
+          name: End to End Tests
+          command: npm run e2e
+```
+
+### IE11 on CI
+
+`CicleCI` provides Windows machines,
+therefore we can use continuous integration to **run tests in Internet Explorer 11**, if it is needed.
+
+Update `src/karma.conf.js` with info about `IECi` in `customLaunchers`:
+
+```javascript
+module.exports = function(config) {
+  config.set({
+    // ...
+    customLaunchers: {
+      // ...
+      // Add the definition for IE
+      IECi: {
+        base: 'IE',
+        // important to add
+        flags: ['-extoff'],
+      },
+      // ...
+    },
+    // ...
+  });
+};
+```
+
+Then update `.circleci/config.yml` with a new step for `IE`:
+
+```yaml
+version: 2.1
+orbs:
+  # important to add
+  win: circleci/windows@2.4.0
+jobs:
+  # important to add
+  IE:
+    executor:
+      name: win/default
+    steps:
+      - checkout
+      - restore_cache:
+          key: cache-{{ arch }}
+      - run:
+          name: NPM Install
+          command: |
+            if ((Test-Path "node_modules") -ne "True") {
+              npm ci --no-optional --ignore-scripts
+            }
+      - save_cache:
+          key: root-{{ arch }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Unit Tests
+          command: >
+            npm run test --
+            --browsers=IECi
+            --no-watch
+            --no-progress
+    environment:
+      IE_BIN: 'C:\Program Files\Internet Explorer\iexplore.exe'
 ```
 
 ## Fast match of versions
@@ -174,8 +260,3 @@ jobs:
 | 1.19.x    | 77.0.3865.40  |
 | 1.17.x    | 76.0.3809.126 |
 | 1.15.x    | 75.0.3770.140 |
-
-## Warnings
-
-* no alpine images
-* should you not find node version you want, please open an issue on https://github.com/satanTime/puppeteer-node/issues

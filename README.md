@@ -1,6 +1,7 @@
 # Puppeteer Node for CI
 
-Documentation is on [satantime.github.io](https://satantime.github.io/puppeteer-node/).
+Documentation how to configure continuous integration for Angular applications
+is on https://satantime.github.io/puppeteer-node/.
 
 ## Motivation
 
@@ -12,3 +13,8 @@ specific versions of Chrome Browser. This makes tough providing images with spec
 for all webdriver versions.
   
 Therefore, which puppeteer to install and to use is up to you, it is just one line of code.
+
+## Warnings
+
+- no alpine images
+- should you not find node version you want, please open [an issue on GitHub](https://github.com/satanTime/puppeteer-node/issues/new)
