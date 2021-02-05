@@ -67,8 +67,6 @@ while [[ $URL != "" ]]; do
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
         if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
-            docker pull node:$tag
-            docker pull satantime/puppeteer-node:$tag
             echo "FROM node:${tag}" > Dockerfile && \
             cat Dockerfile.template >> Dockerfile && \
             docker buildx build \
