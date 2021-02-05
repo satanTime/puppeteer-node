@@ -33,6 +33,14 @@ while [[ $URL != "" ]]; do
         grep -v 'wheezy'
     )
     for tag in $tags; do
+        skip=1
+        if [[ `echo $tag | grep -oE '^\d+'` =~ ^(10|12|14|15|16)$ ]]; then
+          skip=0
+        fi
+        if [[ "${skip}" = "1" ]]; then
+          continue
+        fi
+
         exitCode=1
         while [[ $exitCode != 0 ]]; do
             content=$(curl -s https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag)
@@ -47,6 +55,16 @@ while [[ $URL != "" ]]; do
             sed -e 's/"$//' && \
             echo dockerfile:`md5 -q Dockerfile.template`
         )
+        platforms=$(
+            echo $content | \
+            grep -oE '"architecture":"[^"]+"' | \
+            sed -e 's/^"architecture":"//' | \
+            sed -e 's/"$//' | \
+            sed -e 's/^/linux\//' | \
+            tr '\n' ',' | \
+            sed -e 's/,$//'
+        )
+
         digestOld=$(cat hashes/$tag 2> /dev/null)
         if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             docker pull node:$tag
@@ -54,7 +72,7 @@ while [[ $URL != "" ]]; do
             echo "FROM node:${tag}" > Dockerfile && \
             cat Dockerfile.template >> Dockerfile && \
             docker buildx build \
-                --platform linux/amd64,linux/arm/v7,linux/arm64/v8 \
+                --platform $platforms \
                 --tag satantime/puppeteer-node:$tag --push . && \
             rm Dockerfile
             code="${?}"
