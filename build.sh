@@ -70,6 +70,10 @@ while [[ $URL != "" ]]; do
             echo "FROM node:${tag}" > Dockerfile && \
             cat Dockerfile.template >> Dockerfile && \
             docker buildx build \
+                --add-host archive.debian.org.lo:172.16.0.1 \
+                --add-host deb.debian.org.lo:172.16.0.1 \
+                --add-host security.debian.org.lo:172.16.0.1 \
+                --add-host snapshot.debian.org.lo:172.16.0.1 \
                 --platform $platforms \
                 --tag satantime/puppeteer-node:$tag --push . && \
             rm Dockerfile

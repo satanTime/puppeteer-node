@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  mirror:
+    build:
+      context: ./mirror
+    ports:
+    - 80:80
+    volumes:
+    - ./mirror-data:/mirror
