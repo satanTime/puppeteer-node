@@ -52,7 +52,9 @@ while [[ $URL != "" ]]; do
             echo $content | \
             grep -oE '"digest":"[^"]+"' | \
             sed -e 's/^"digest":"//' | \
-            sed -e 's/"$//' && \
+            sed -e 's/"$//' | \
+            sort | \
+            uniq && \
             echo dockerfile:`md5 -q Dockerfile.template`
         )
         platforms=$(
