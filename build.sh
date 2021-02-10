@@ -60,6 +60,11 @@ while [[ $URL != "" ]]; do
             grep -oE '"architecture":"[^"]+"' | \
             sed -e 's/^"architecture":"//' | \
             sed -e 's/"$//' | \
+            sort | \
+            uniq
+        )
+        platforms=$(
+            echo "$platforms" | \
             sed -e 's/^/linux\//' | \
             tr '\n' ',' | \
             sed -e 's/,$//'
