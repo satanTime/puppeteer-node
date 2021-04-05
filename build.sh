@@ -34,9 +34,9 @@ while [[ $URL != "" ]]; do
     )
     for tag in $tags; do
         skip=1
-        if [[ `echo $tag | grep -oE '^[^\.-]+'` =~ ^(10|12|14|15|16|dubnium|erbium|fermium)$ ]]; then
+#        if [[ `echo $tag | grep -oE '^[^\.-]+'` =~ ^(10|12|14|15|16|current|lts|dubnium|erbium|fermium)$ ]]; then
           skip=0
-        fi
+#        fi
         if [[ "${skip}" = "1" ]]; then
           continue
         fi
