@@ -19,10 +19,10 @@ There are examples for [Bitbucket Pipelines](#configure-bitbucket-pipelines) and
 The first step is to decide which Chromium version (Chrome Browser) you want to use for tests.
 
 Not all version are supported. You need to check puppeteer versions first.
-At the moment of writing the article puppeteer version `5.4.x` works with the version `88.x` of Chromium (Chrome Browser).
+At the moment of writing the article puppeteer version `8.0.x` works with the version `90.x` of Chromium (Chrome Browser).
 Let's proceed with it.
 ```bash
-npm install --save-dev 'puppeteer@~5.5.0'
+npm install --save-dev 'puppeteer@~8.0.0'
 ```
 
 ## 2. Configure webdriver
@@ -30,13 +30,13 @@ npm install --save-dev 'puppeteer@~5.5.0'
 Another news is that the webdriver also needs a specific version of the chromedriver to work with the chosen Chromium.
 
 We need to go to [chromedriver downloads](https://chromedriver.chromium.org/downloads) and to choose a version
-that supports `88.x`. At the moment of writing the article it is `ChromeDriver 88.0.4324.27`.
+that supports `90.x`. At the moment of writing the article it is `ChromeDriver 90.0.4430.24`.
 
 To configure it we need to edit `package.json` and add there a `postinstall` script.
 ```json
 {
   "scripts": {
-    "postinstall": "webdriver-manager update --versions.chrome 88.0.4324.27 --gecko=false"
+    "postinstall": "webdriver-manager update --versions.chrome 90.0.4430.24 --gecko=false"
   }
 }
 ```
@@ -243,9 +243,9 @@ jobs:
 
 | puppeteer | chromedriver  |
 |----------:|--------------:|
-| 8.0.x     | 90.x          |
-| 7.1.x     | 90.x          |
-| 7.0.x     | 90.x          |
+| 8.0.x     | 90.0.4430.24  |
+| 7.1.x     | 90.0.4430.24  |
+| 7.0.x     | 90.0.4430.24  |
 | 6.0.x     | 88.0.4324.27  |
 | 5.5.x     | 88.0.4324.27  |
 | 5.4.x     | 86.0.4240.22  |
