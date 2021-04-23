@@ -1,5 +1,12 @@
 {
   "extends": [
     "config:base"
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "packagePatterns": ["nginx"],
+      "allowedVersions": "/^\\d+\\.\\d*[02468]\\.\\d+$/"
+    }
   ]
 }

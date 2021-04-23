@@ -12,7 +12,7 @@ while [[ $URL != "" ]]; do
 
     exitCode=1
     while [[ $exitCode != 0 ]]; do
-        content=$(curl -s $URL)
+        content=$(curl -sL $URL)
         exitCode=$?
         echo "$exitCode - $URL"
     done
@@ -43,7 +43,7 @@ while [[ $URL != "" ]]; do
 
         exitCode=1
         while [[ $exitCode != 0 ]]; do
-            content=$(curl -s https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag)
+            content=$(curl -sL https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag)
             exitCode=$?
             echo "$exitCode - https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag"
         done
@@ -71,20 +71,39 @@ while [[ $URL != "" ]]; do
             tr '\n' ',' | \
             sed -e 's/,$//'
         )
+        if [[ "${platforms}" == "linux/" ]]; then
+          platforms="linux/amd64"
+        fi
+        if [[ "${platforms}" == "linux/amd64" ]]; then
+          platforms=""
+        fi
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
         if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             echo "FROM node:${tag}" > Dockerfile && \
             cat Dockerfile.template >> Dockerfile && \
-            docker buildx build \
-                --add-host archive.debian.org.lo:172.16.0.1 \
-                --add-host deb.debian.org.lo:172.16.0.1 \
-                --add-host security.debian.org.lo:172.16.0.1 \
-                --add-host snapshot.debian.org.lo:172.16.0.1 \
-                --platform $platforms \
-                --tag satantime/puppeteer-node:$tag --push . && \
-            rm Dockerfile
-            code="${?}"
+            if [[ "${platforms}" == "" ]]; then
+              DOCKER_BUILDKIT=0 docker build \
+                  --add-host archive.debian.org.lo:172.16.0.1 \
+                  --add-host deb.debian.org.lo:172.16.0.1 \
+                  --add-host security.debian.org.lo:172.16.0.1 \
+                  --add-host snapshot.debian.org.lo:172.16.0.1 \
+                  --tag satantime/puppeteer-node:$tag . && \
+              docker push satantime/puppeteer-node:$tag && \
+              rm Dockerfile
+              code="${?}"
+            fi
+            if [[ "${platforms}" != "" ]]; then
+              docker buildx build \
+                  --add-host archive.debian.org.lo:172.16.0.1 \
+                  --add-host deb.debian.org.lo:172.16.0.1 \
+                  --add-host security.debian.org.lo:172.16.0.1 \
+                  --add-host snapshot.debian.org.lo:172.16.0.1 \
+                  --platform $platforms \
+                  --tag satantime/puppeteer-node:$tag --push . && \
+              rm Dockerfile
+              code="${?}"
+            fi
             if [[ -f hashes/$tag.error ]]; then
                 git rm -f hashes/$tag.error
             fi
