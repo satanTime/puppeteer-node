@@ -68,6 +68,7 @@ while [[ $URL != "" ]]; do
         platforms=$(
             echo "$platforms" | \
             sed -e 's/^/linux\//' | \
+            grep -v 'ppc64le' | \
             tr '\n' ',' | \
             sed -e 's/,$//'
         )
