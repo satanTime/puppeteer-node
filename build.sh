@@ -48,6 +48,18 @@ while [[ $URL != "" ]]; do
             echo "$exitCode - https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag"
         done
 
+        md5=""
+        if [[ "$(which md5)" != "" ]]; then
+          md5="md5 -q Dockerfile.template"
+        fi
+        if [[ "$(which md5sum)" != "" ]]; then
+          md5=$(md5sum Dockerfile.template | grep -oE '^[^ ]+')
+        fi
+        if [[ "${md5}" == "" ]]; then
+          echo "Cannot calculate md5 sum for the template"
+          exit 1
+        fi
+
         digestCurrent=$(
             echo $content | \
             grep -oE '"digest":"[^"]+"' | \
@@ -55,7 +67,7 @@ while [[ $URL != "" ]]; do
             sed -e 's/"$//' | \
             sort | \
             uniq && \
-            echo dockerfile:`md5 -q Dockerfile.template`
+            echo dockerfile:${md5}
         )
         platforms=$(
             echo $content | \
