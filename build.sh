@@ -50,7 +50,7 @@ while [[ $URL != "" ]]; do
 
         md5=""
         if [[ "$(which md5)" != "" ]]; then
-          md5="md5 -q Dockerfile.template"
+          md5=$(md5 -q Dockerfile.template)
         fi
         if [[ "$(which md5sum)" != "" ]]; then
           md5=$(md5sum Dockerfile.template | grep -oE '^[^ ]+')
