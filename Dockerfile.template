@@ -25,7 +25,6 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
         ca-certificates \
         fonts-liberation \
         gconf-service \
-        libappindicator1 \
         libasound2 \
         libatk1.0-0 \
         libc6 \
@@ -62,7 +61,6 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
         libxtst6 \
         lsb-release \
         wget \
-        xdg-utils \
     && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoremove && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoclean && \

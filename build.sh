@@ -33,14 +33,6 @@ while [[ $URL != "" ]]; do
         grep -v 'wheezy'
     )
     for tag in $tags; do
-        skip=1
-#        if [[ `echo $tag | grep -oE '^[^\.-]+'` =~ ^(10|12|14|15|16|current|lts|dubnium|erbium|fermium)$ ]]; then
-          skip=0
-#        fi
-        if [[ "${skip}" = "1" ]]; then
-          continue
-        fi
-
         exitCode=1
         while [[ $exitCode != 0 ]]; do
             content=$(curl -sL https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag)
@@ -125,7 +117,7 @@ while [[ $URL != "" ]]; do
             if [[ "${code}" == "0" ]]; then
                 printf '%s\n' $digestCurrent > hashes/$tag
                 git add hashes/$tag
-                git commit -m "Update of $tag on $(date +%Y-%m-%d)" hashes/$tag
+                git commit -m "chore($tag): updated" hashes/$tag
             fi
             if [[ "${code}" != "0" ]]; then
                 printf '%s\n' $digestCurrent > "hashes/${tag}@error"
