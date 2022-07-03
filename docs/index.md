@@ -19,10 +19,11 @@ There are examples for [Bitbucket Pipelines](#configure-bitbucket-pipelines) and
 The first step is to decide which Chromium version (Chrome Browser) you want to use for tests.
 
 Not all version are supported. You need to check puppeteer versions first.
-At the moment of writing the article puppeteer version `8.0.x` works with the version `90.x` of Chromium (Chrome Browser).
+At the moment of writing the article puppeteer version `15.3.x` works with the version `103.x` of Chromium (Chrome Browser).
 Let's proceed with it.
+
 ```bash
-npm install --save-dev 'puppeteer@~8.0.0'
+npm install --save-dev 'puppeteer@~15.3.0'
 ```
 
 ## 2. Configure webdriver
@@ -30,19 +31,21 @@ npm install --save-dev 'puppeteer@~8.0.0'
 Another news is that the webdriver also needs a specific version of the chromedriver to work with the chosen Chromium.
 
 We need to go to [chromedriver downloads](https://chromedriver.chromium.org/downloads) and to choose a version
-that supports `90.x`. At the moment of writing the article it is `ChromeDriver 90.0.4430.24`.
+that supports `103.x`. At the moment of writing the article it is `ChromeDriver 103.0.5060.53`.
 
 To configure it we need to edit `package.json` and add there a `postinstall` script.
+
 ```json
 {
   "scripts": {
-    "postinstall": "webdriver-manager update --versions.chrome 90.0.4430.24 --gecko=false"
+    "postinstall": "webdriver-manager update --versions.chrome 103.0.5060.53 --gecko=false"
   }
 }
 ```
 
 The next step is to disable automatic updates of the webdriver when we're executing `e2e` tests.
 For that we need to add `--webdriver-update=false` flag to `e2e` script in `package.json`.
+
 ```json
 {
   "scripts": {
@@ -54,6 +57,7 @@ For that we need to add `--webdriver-update=false` flag to `e2e` script in `pack
 ## 3. Configure Karma in Angular 2+ app to use puppeteer for CI
 
 Update `src/karma.conf.js` with the next changes.
+
 ```javascript
 // important to add
 process.env.CHROME_BIN = require('puppeteer').executablePath();
@@ -85,6 +89,7 @@ module.exports = function(config) {
 ## 4. Configure Protractor in Angular 2+ app to use puppeteer for CI
 
 Update `e2e/protractor.conf.js` with the next changes.
+
 ```javascript
 exports.config = {
   // ...
@@ -109,9 +114,11 @@ exports.config = {
 ```
 
 ## Configure BitBucket pipelines
+
 An example of `bitbucket-pipelines.yml` how to run unit and e2e tests.
+
 ```yaml
-image: satantime/puppeteer-node:12.16.1-buster # put here version you need
+image: satantime/puppeteer-node:16.15.1 # put here version you need
 
 pipelines:
   default:
@@ -139,14 +146,16 @@ pipelines:
 ```
 
 ## Configure CircleCI
+
 An example of `.circleci/config.yml` how to run unit and e2e tests.
+
 ```yaml
 version: 2.1
 jobs:
   build:
     docker:
       # put here version you need
-      - image: satantime/puppeteer-node:12.16-buster
+      - image: satantime/puppeteer-node:16.15.1
     steps:
       - checkout
       - restore_cache:
@@ -155,8 +164,7 @@ jobs:
           name: Install
           command: |
             if [ ! -d "./node_modules/" ]; then
-              npm ci --no-optional --ignore-scripts && \
-              node ./node_modules/puppeteer/install.js
+              npm ci && npm run postinstall
             fi
       - save_cache:
           key: cache
@@ -243,6 +251,21 @@ jobs:
 
 | puppeteer |    chromedriver |
 |----------:|----------------:|
+|    15.3.x |   103.0.5060.53 |
+|    15.2.x |   103.0.5060.53 |
+|    15.1.x |   103.0.5060.53 |
+|    15.0.x |   103.0.5060.53 |
+|    14.4.x |   103.0.5060.53 |
+|    14.3.x |   103.0.5060.53 |
+|    14.2.x |   103.0.5060.53 |
+|    14.1.x |   101.0.4951.41 |
+|    14.0.x |   101.0.4951.41 |
+|    13.7.x |   101.0.4951.41 |
+|    13.6.x |   101.0.4951.41 |
+|    13.5.x |    99.0.4844.51 |
+|    13.4.x |    99.0.4844.51 |
+|    13.3.x |    99.0.4844.51 |
+|    13.2.x |    99.0.4844.51 |
 |    13.1.x |    97.0.4692.71 |
 |    13.0.x |    97.0.4692.71 |
 |    12.0.x |    97.0.4692.71 |
