@@ -1,12 +1,21 @@
-RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
-    cp /etc/apt/sources.list.bak /etc/apt/sources.list && \
-    echo "Original sources.list:" && \
-    cat /etc/apt/sources.list && \
-    version=$(cat /etc/os-release | grep 'VERSION=' | grep -oE '\(.*\)' | grep -oE '\w+' || echo "") && \
+RUN version=$(cat /etc/os-release | grep 'VERSION=' | grep -oE '\(.*\)' | grep -oE '\w+' || echo "") && \
     if [ "$version" = "" ]; then \
-        version=$(cat /etc/os-release | grep 'PRETTY_NAME=' | grep -oE '\w+/\w+"' | grep -oE '\w+/' | grep -oE '\w+' || echo ""); \
+        version=$(cat /etc/os-release | grep 'PRETTY_NAME=' | grep -oE '\w+/\w+"' | grep -oE '\w+/' | grep -oE '\w+' || echo "") && \
+        true; \
     fi && \
     echo "Version: ${version}" && \
+    if [ -e /etc/apt/sources.list ]; then \
+        cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
+        echo "Original sources.list:" && \
+        cat /etc/apt/sources.list && \
+        true; \
+    fi && \
+    if [ -e /etc/apt/sources.list.d/debian.sources ]; then \
+        cp /etc/apt/sources.list.d/debian.sources /etc/apt/debian.sources.bak && \
+        echo "Original sources.list:" && \
+        cat /etc/apt/sources.list.d/debian.sources && \
+        true; \
+    fi && \
     if [ "$version" = "jessie" ]; then \
         echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie main' > /etc/apt/sources.list && \
         echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list && \
@@ -17,9 +26,18 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
         echo 'deb [check-valid-until=no] http://archive.debian.org/debian wheezy main' >> /etc/apt/sources.list && \
         true; \
     fi && \
-    sed -Ei "s/\.debian\.org/.debian.org.lo/g" /etc/apt/sources.list && \
-    echo "Updated sources.list:" && \
-    cat /etc/apt/sources.list && \
+    if [ -e /etc/apt/sources.list ]; then \
+        sed -Ei "s/\.debian\.org/.debian.org.lo/g" /etc/apt/sources.list && \
+        echo "Updated sources.list:" && \
+        cat /etc/apt/sources.list && \
+        true; \
+    fi && \
+    if [ -e /etc/apt/sources.list.d/debian.sources ]; then \
+        sed -Ei "s/\.debian\.org/.debian.org.lo/g" /etc/apt/sources.list.d/debian.sources && \
+        echo "Updated sources.list:" && \
+        cat /etc/apt/sources.list.d/debian.sources && \
+        true; \
+    fi && \
     apt-get -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::Check-Valid-Until=false install -y --force-yes --no-install-recommends \
         ca-certificates \
@@ -64,5 +82,13 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
     && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoremove && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoclean && \
-    mv /etc/apt/sources.list.bak /etc/apt/sources.list && \
-    rm -Rf /var/lib/apt/lists/*
+    if [ -e /etc/apt/sources.list.bak ]; then \
+        mv /etc/apt/sources.list.bak /etc/apt/sources.list && \
+        rm -Rf /var/lib/apt/lists/* && \
+        true; \
+    fi && \
+    if [ -e /etc/apt/debian.sources.bak ]; then \
+        mv /etc/apt/debian.sources.bak /etc/apt/sources.list.d/debian.sources && \
+        rm -Rf /var/lib/apt/lists/* && \
+        true; \
+    fi
