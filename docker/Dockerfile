@@ -16,16 +16,6 @@ RUN version=$(cat /etc/os-release | grep 'VERSION=' | grep -oE '\(.*\)' | grep -
         cat /etc/apt/sources.list.d/debian.sources && \
         true; \
     fi && \
-    if [ "$version" = "jessie" ]; then \
-        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie main' > /etc/apt/sources.list && \
-        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list && \
-        true; \
-    fi && \
-    if [ "$version" = "wheezy" ]; then \
-        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie main' > /etc/apt/sources.list && \
-        echo 'deb [check-valid-until=no] http://archive.debian.org/debian wheezy main' >> /etc/apt/sources.list && \
-        true; \
-    fi && \
     if [ -e /etc/apt/sources.list ]; then \
         sed -Ei "s/\.debian\.org/.debian.org.lo/g" /etc/apt/sources.list && \
         echo "Updated sources.list:" && \

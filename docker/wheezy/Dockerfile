@@ -1,0 +1,68 @@
+RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
+    cp /etc/apt/sources.list.bak /etc/apt/sources.list && \
+    echo "Original sources.list:" && \
+    cat /etc/apt/sources.list && \
+    version=$(cat /etc/os-release | grep 'VERSION=' | grep -oE '\(.*\)' | grep -oE '\w+' || echo "") && \
+    if [ "$version" = "" ]; then \
+        version=$(cat /etc/os-release | grep 'PRETTY_NAME=' | grep -oE '\w+/\w+"' | grep -oE '\w+/' | grep -oE '\w+' || echo ""); \
+    fi && \
+    echo "Version: ${version}" && \
+    if [ "$version" = "jessie" ]; then \
+        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie main' > /etc/apt/sources.list && \
+        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie-backports main' >> /etc/apt/sources.list && \
+        true; \
+    fi && \
+    if [ "$version" = "wheezy" ]; then \
+        echo 'deb [check-valid-until=no] http://archive.debian.org/debian jessie main' > /etc/apt/sources.list && \
+        echo 'deb [check-valid-until=no] http://archive.debian.org/debian wheezy main' >> /etc/apt/sources.list && \
+        true; \
+    fi && \
+    sed -Ei "s/\.debian\.org/.debian.org.lo/g" /etc/apt/sources.list && \
+    echo "Updated sources.list:" && \
+    cat /etc/apt/sources.list && \
+    apt-get -o Acquire::Check-Valid-Until=false update && \
+    apt-get -o Acquire::Check-Valid-Until=false install -y --force-yes --no-install-recommends \
+        ca-certificates \
+        fonts-liberation \
+        gconf-service \
+        libasound2 \
+        libatk1.0-0 \
+        libc6 \
+        libcairo2 \
+        libcups2 \
+        libdbus-1-3 \
+        libexpat1 \
+        libfontconfig1 \
+        libgbm1 \
+        libgcc1 \
+        libgconf-2-4 \
+        libgdk-pixbuf2.0-0 \
+        libglib2.0-0 \
+        libgtk-3-0 \
+        libnspr4 \
+        libnss3 \
+        libpango-1.0-0 \
+        libpangocairo-1.0-0 \
+        libstdc++6 \
+        libx11-6 \
+        libx11-xcb1 \
+        libxcb-dri3-0 \
+        libxcb1 \
+        libxcomposite1 \
+        libxcursor1 \
+        libxdamage1 \
+        libxext6 \
+        libxfixes3 \
+        libxi6 \
+        libxrandr2 \
+        libxrender1 \
+        libxshmfence1 \
+        libxss1 \
+        libxtst6 \
+        lsb-release \
+        wget \
+    && \
+    apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoremove && \
+    apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoclean && \
+    mv /etc/apt/sources.list.bak /etc/apt/sources.list && \
+    rm -Rf /var/lib/apt/lists/*
