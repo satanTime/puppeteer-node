@@ -128,7 +128,7 @@ while [[ $URL != "" ]]; do
         fi
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
-        if [[ "$(echo "$digestOld" | grep version:)" == "" ]]; then
+        if [[ "${$digestOld}" != "" ]] && [[ "$(echo "$digestOld" | grep version:)" == "" ]]; then
             echo version:${version} >> hashes/$tag
             git add hashes/$tag
             git commit -m "chore($tag): version" hashes/$tag
