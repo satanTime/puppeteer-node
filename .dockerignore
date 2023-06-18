@@ -9,3 +9,4 @@ build.sh
 hashes
 mirror
 mirror-data
+buildx-data

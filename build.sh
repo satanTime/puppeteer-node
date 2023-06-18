@@ -161,6 +161,8 @@ while [[ $URL != "" ]]; do
             fi
             if [[ "${platforms}" != "" ]]; then
               docker buildx build \
+                  --cache-from type=local,src=./buildx-data \
+                  --cache-to type=local,dest=./buildx-data \
                   --add-host archive.debian.org.lo:172.16.0.1 \
                   --add-host deb.debian.org.lo:172.16.0.1 \
                   --add-host security.debian.org.lo:172.16.0.1 \
