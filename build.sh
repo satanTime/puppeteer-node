@@ -84,6 +84,11 @@ while [[ $URL != "" ]]; do
         version=$(detectVersion $tag)
         dockerfile=$(detectDockerfile $version)
 
+        if [[ "${version}" == "" ]]; then
+            echo "Cannot detect version of ${tag}"
+            exit 1
+        fi
+
         md5=""
         if [[ "$(which md5)" != "" ]]; then
           md5=$(md5 -q $dockerfile)
@@ -189,6 +194,7 @@ while [[ $URL != "" ]]; do
                 printf '%s\n' $digestCurrent > "hashes/${tag}@error"
                 git add "hashes/${tag}@error"
             fi
+            sleep 10
         fi
         true;
     done
