@@ -1,10 +1,4 @@
-RUN version=$(cat /etc/os-release | grep 'VERSION=' | grep -oE '\(.*\)' | grep -oE '\w+' || echo "") && \
-    if [ "$version" = "" ]; then \
-        version=$(cat /etc/os-release | grep 'PRETTY_NAME=' | grep -oE '\w+/\w+"' | grep -oE '\w+/' | grep -oE '\w+' || echo "") && \
-        true; \
-    fi && \
-    echo "Version: ${version}" && \
-    if [ -e /etc/apt/sources.list ]; then \
+RUN if [ -e /etc/apt/sources.list ]; then \
         cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
         echo "Original sources.list:" && \
         cat /etc/apt/sources.list && \
