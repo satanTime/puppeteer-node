@@ -1,3 +1,4 @@
+/.env
 /.url
 /Dockerfile
 /mirror-data

@@ -27,6 +27,9 @@ detectVersion () {
             echo ''
         )
     fi
+    if [[ "${version}" == "" ]]; then
+        version=$(cat hashes/$1 | grep 'version' | sed -e 's/^version://')
+    fi
 
     echo $version
 }
@@ -155,6 +158,8 @@ while [[ $URL != "" ]]; do
             cat $dockerfile >> Dockerfile && \
             if [[ "${platforms}" == "" ]]; then
               DOCKER_BUILDKIT=0 docker build \
+                  --import-cache type=local,src=./buildx-data \
+                  --export-cache type=local,src=./buildx-data \
                   --add-host archive.debian.org.lo:172.16.0.1 \
                   --add-host deb.debian.org.lo:172.16.0.1 \
                   --add-host security.debian.org.lo:172.16.0.1 \
