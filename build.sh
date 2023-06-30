@@ -157,17 +157,7 @@ while [[ $URL != "" ]]; do
             echo "FROM node:${tag}" > Dockerfile && \
             cat $dockerfile >> Dockerfile && \
             if [[ "${platforms}" == "" ]]; then
-              DOCKER_BUILDKIT=0 docker build \
-                  --import-cache type=local,src=./buildx-data \
-                  --export-cache type=local,src=./buildx-data \
-                  --add-host archive.debian.org.lo:172.16.0.1 \
-                  --add-host deb.debian.org.lo:172.16.0.1 \
-                  --add-host security.debian.org.lo:172.16.0.1 \
-                  --add-host snapshot.debian.org.lo:172.16.0.1 \
-                  --tag satantime/puppeteer-node:$tag . && \
-              docker push satantime/puppeteer-node:$tag && \
-              rm Dockerfile
-              code="${?}"
+                platforms="linux/amd64"
             fi
             if [[ "${platforms}" != "" ]]; then
               docker buildx build \
