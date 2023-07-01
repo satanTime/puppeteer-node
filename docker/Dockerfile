@@ -14,6 +14,7 @@ RUN if [ -e /etc/apt/sources.list ]; then \
         cat /etc/apt/sources.list | \
           sed -E 's/\.debian\.org/.debian.org.lo/g' | \
           sed -E '/-updates/d' | \
+          sed -E '/-security/d' | \
           sed -E '/\/updates/d' > /etc/apt/sources.list.polished && \
         mv /etc/apt/sources.list.polished /etc/apt/sources.list && \
         echo "Updated sources.list:" && \
@@ -27,6 +28,7 @@ RUN if [ -e /etc/apt/sources.list ]; then \
           sed -E '/debian-security/d' | \
           sed -E 's/Suites: ([^\s]+) \1-updates/Suites: \1/g' | \
           sed -E '/-updates/d' | \
+          sed -E '/-security/d' | \
           sed -E 's/\.debian\.org/.debian.org.lo/g' | \
           sed -E 's/\|/\n/g' > /etc/apt/sources.list.d/debian.sources.polished && \
         mv /etc/apt/sources.list.d/debian.sources.polished /etc/apt/sources.list.d/debian.sources && \
