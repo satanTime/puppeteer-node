@@ -47,8 +47,17 @@ detectDockerfile () {
 if [[ -f .url ]]; then
     URL=$(cat .url)
 fi
+tagsInclude=""
 if [[ $URL == "" ]]; then
     URL=https://registry.hub.docker.com/v2/repositories/library/node/tags
+    tagsInclude=$(
+      echo 'bookworm' && \
+      echo 'bullseye' && \
+      echo 'buster' && \
+      echo 'stretch' && \
+      echo 'jessie' && \
+      echo 'wheezy'
+    )
 fi
 
 while [[ $URL != "" ]]; do
@@ -68,14 +77,16 @@ while [[ $URL != "" ]]; do
         sed -e 's/"$//'
     )
     tags=$(
+        echo "${tagsInclude}" && \
         echo $content | \
         grep -oE '"name":"[^"]+"' | \
         sed -e 's/^"name":"//' | \
         sed -e 's/"$//' | \
         grep -v 'alpine' | \
-        grep -v 'onbuild' | \
-        grep -v 'wheezy'
+        grep -v 'onbuild'
     )
+    tags=$(echo "${tags}" | sed -E '/^$/d')
+    tagsInclude=""
     for tag in $tags; do
         exitCode=1
         while [[ $exitCode != 0 ]]; do
@@ -151,7 +162,7 @@ while [[ $URL != "" ]]; do
             )
         fi
 
-        if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
+        if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ "${digestBuildX}" == "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             version=$(detectVersion $tag true)
             dockerfile=$(detectDockerfile $version)
 
