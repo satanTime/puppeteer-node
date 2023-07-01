@@ -136,6 +136,11 @@ while [[ $URL != "" ]]; do
         fi
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
+        digestBuildX=""
+        if [[ "${digestOld}" != "" ]]; then
+            digestBuildX=$(echo "${digestOld}" | grep 'buildx:' | sed -E 's/^buildx\:/,digest=/g')
+            digestOld=$(echo "${digestOld}" | sed -E '/buildx\:/d')
+        fi
         if [[ "${digestOld}" != "" ]] && [[ "$(echo "$digestOld" | grep version:)" == "" ]]; then
             echo version:${version} >> hashes/$tag
             git add hashes/$tag
@@ -159,19 +164,20 @@ while [[ $URL != "" ]]; do
             if [[ "${platforms}" == "" ]]; then
                 platforms="linux/amd64"
             fi
-            if [[ "${platforms}" != "" ]]; then
-              docker buildx build \
-                  --cache-from type=local,src=./buildx-data \
-                  --cache-to type=local,dest=./buildx-data \
-                  --add-host archive.debian.org.lo:172.16.0.1 \
-                  --add-host deb.debian.org.lo:172.16.0.1 \
-                  --add-host security.debian.org.lo:172.16.0.1 \
-                  --add-host snapshot.debian.org.lo:172.16.0.1 \
-                  --platform $platforms \
-                  --tag satantime/puppeteer-node:$tag --push . && \
-              rm Dockerfile
-              code="${?}"
-            fi
+            docker buildx build \
+              --cache-from type=local,src=./buildx-data${digestBuildX} \
+              --cache-to type=local,dest=./buildx-data \
+              --add-host archive.debian.org.lo:172.16.0.1 \
+              --add-host deb.debian.org.lo:172.16.0.1 \
+              --add-host security.debian.org.lo:172.16.0.1 \
+              --add-host snapshot.debian.org.lo:172.16.0.1 \
+              --platform $platforms \
+              --tag satantime/puppeteer-node:$tag --push . && \
+            digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
+            digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
+            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
+            rm Dockerfile
+            code="${?}"
             if [[ -f "hashes/${tag}.error" ]]; then
                 rm "hashes/${tag}.error"
                 git rm -f "hashes/${tag}.error"
