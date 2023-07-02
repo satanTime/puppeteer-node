@@ -162,7 +162,7 @@ while [[ $URL != "" ]]; do
             )
         fi
 
-        if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ "${digestBuildX}" == "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
+        if [[ "$(echo "$digestCurrent" | sort)" != "$(echo "$digestOld" | sort)" ]] && [[ $digestCurrent != "" ]] || [[ -f hashes/$tag.error ]] || [[ -f "hashes/${tag}@error" ]]; then
             version=$(detectVersion $tag true)
             dockerfile=$(detectDockerfile $version)
 
