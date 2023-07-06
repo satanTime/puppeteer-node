@@ -1,4 +1,26 @@
-RUN if [ -e /etc/apt/sources.list ]; then \
+RUN version=$( \
+      cat /etc/os-release | \
+      grep 'VERSION=' | \
+      grep -oE '\(.*\)' | \
+      grep -oE '\w+' || \
+      echo '' \
+    ) && \
+    if [ "$version" = "" ]; then \
+      version=$( \
+        cat /etc/os-release | \
+        grep 'PRETTY_NAME=' | \
+        grep -oE '\w+/\w+"' | \
+        grep -oE '\w+/' | \
+        grep -oE '\w+' || \
+        echo '' \
+      ) && \
+      true; \
+    fi && \
+    updateExist=$(curl --fail -s -o /dev/null "http://deb.debian.org/debian/dists/$version-updates/Release" && echo "yes" || echo "") && \
+    securityExist=$(curl --fail -s -o /dev/null "http://deb.debian.org/debian-security/dists/$version-security/Release" && echo "yes" || echo "") && \
+    echo "Update: ${updateExist}" && \
+    echo "Security: ${securityExist}" && \
+    if [ -e /etc/apt/sources.list ]; then \
         cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
         echo "Original sources.list:" && \
         cat /etc/apt/sources.list && \
@@ -11,26 +33,55 @@ RUN if [ -e /etc/apt/sources.list ]; then \
         true; \
     fi && \
     if [ -e /etc/apt/sources.list ]; then \
-        cat /etc/apt/sources.list | \
-          sed -E 's/\.debian\.org/.debian.org.lo/g' | \
-          sed -E '/-updates/d' | \
-          sed -E '/-security/d' | \
-          sed -E '/\/updates/d' > /etc/apt/sources.list.polished && \
+        updatedSources=$( \
+          cat /etc/apt/sources.list | \
+            sed -E 's/\.debian\.org/.debian.org.lo/g' \
+        ) && \
+        if [ "${updateExist}" = "" ]; then \
+          updatedSources=$( \
+            echo "${updatedSources}" | \
+            sed -E '/-updates/d' | \
+            sed -E '/\/updates/d' \
+          ) && \
+          true; \
+        fi && \
+        if [ "${securityExist}" = "" ]; then \
+          updatedSources=$( \
+            echo "${updatedSources}" | \
+            sed -E '/-security/d' \
+          ) && \
+          true; \
+        fi && \
+        echo "${updatedSources}" > /etc/apt/sources.list.polished && \
         mv /etc/apt/sources.list.polished /etc/apt/sources.list && \
         echo "Updated sources.list:" && \
         cat /etc/apt/sources.list && \
         true; \
     fi && \
     if [ -e /etc/apt/sources.list.d/debian.sources ]; then \
-        cat /etc/apt/sources.list.d/debian.sources | \
+        updatedSources=$( \
+          cat /etc/apt/sources.list.d/debian.sources | \
           sed -z 's/\n/|/gm' | \
           sed -E 's/\|\|/\n/g' | \
-          sed -E '/debian-security/d' | \
-          sed -E 's/Suites: ([^\s]+) \1-updates/Suites: \1/g' | \
-          sed -E '/-updates/d' | \
-          sed -E '/-security/d' | \
-          sed -E 's/\.debian\.org/.debian.org.lo/g' | \
-          sed -E 's/\|/\n/g' > /etc/apt/sources.list.d/debian.sources.polished && \
+          sed -E 's/\.debian\.org/.debian.org.lo/g' \
+        ) && \
+        if [ "${updateExist}" = "" ]; then \
+          updatedSources=$( \
+            echo "${updatedSources}" | \
+            sed -E 's/Suites: ([^\s]+) \1-updates/Suites: \1/g' | \
+            sed -E '/-updates/d' \
+          ) && \
+          true; \
+        fi && \
+        if [ "${securityExist}" = "" ]; then \
+          updatedSources=$( \
+            echo "${updatedSources}" | \
+            sed -E '/debian-security/d' | \
+            sed -E '/-security/d' \
+          ) && \
+          true; \
+        fi && \
+        echo "${updatedSources}" | sed -z 's/\n/\n\n/gm' | sed -E 's/\|/\n/g' > /etc/apt/sources.list.d/debian.sources.polished && \
         mv /etc/apt/sources.list.d/debian.sources.polished /etc/apt/sources.list.d/debian.sources && \
         echo "Updated sources.list:" && \
         cat /etc/apt/sources.list.d/debian.sources && \
