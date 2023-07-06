@@ -44,6 +44,12 @@ detectDockerfile () {
     echo $dockerfile;
 }
 
+if [[ ! -d ./buildx-data ]]; then
+    mkdir ./buildx-data
+fi
+if [[ ! -d ./buildx-data/index ]]; then
+    mkdir ./buildx-data/index
+fi
 if [[ -f .url ]]; then
     URL=$(cat .url)
 fi
@@ -142,16 +148,35 @@ while [[ $URL != "" ]]; do
         if [[ "${platforms}" == "linux/" ]]; then
           platforms="linux/amd64"
         fi
-        if [[ "${platforms}" == "linux/amd64" ]]; then
-          platforms=""
+        if [[ "${platforms}" == "" ]]; then
+          platforms="linux/amd64"
         fi
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
         digestBuildX=""
         if [[ "${digestOld}" != "" ]]; then
-            digestBuildX=$(echo "${digestOld}" | grep 'buildx:' | sed -E 's/^buildx\:/,digest=/g')
+            digestBuildX=$(echo "${digestOld}" | grep 'buildx:' | sed -E 's/^buildx\:/--cache-from type=local,src=.\/buildx-data,digest=/g')
             digestOld=$(echo "${digestOld}" | sed -E '/buildx\:/d')
         fi
+        if [[ "${digestCurrent}" != "" ]]; then
+            currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
+            if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
+                digestBuildX=$(
+                    echo "${digestBuildX}" && \
+                    echo "--cache-from type=local,src=./buildx-data,digest=$(cat ./buildx-data/index/${currentBuildFile})"
+                )
+            fi
+        fi
+        if [[ "${digestOld}" != "" ]]; then
+            currentBuildFile=$(echo "${digestOld}" | grep -oE '^sha256:.*$' | md5)
+            if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
+                digestBuildX=$(
+                    echo "${digestBuildX}" && \
+                    echo "--cache-from type=local,src=./buildx-data,digest=$(cat ./buildx-data/index/${currentBuildFile})"
+                )
+            fi
+        fi
+
         if [[ "${digestOld}" != "" ]] && [[ "$(echo "$digestOld" | grep version:)" == "" ]]; then
             echo version:${version} >> hashes/$tag
             git add hashes/$tag
@@ -169,24 +194,26 @@ while [[ $URL != "" ]]; do
             echo Tag: $tag
             echo Version: $version
             echo Dockerfile: $dockerfile
+            echo Caches: $digestBuildX
 
             echo "FROM node:${tag}" > Dockerfile && \
             cat $dockerfile >> Dockerfile && \
-            if [[ "${platforms}" == "" ]]; then
-                platforms="linux/amd64"
-            fi
-            docker buildx build \
-              --cache-from type=local,src=./buildx-data${digestBuildX} \
-              --cache-to type=local,dest=./buildx-data \
-              --add-host archive.debian.org.lo:172.16.0.1 \
-              --add-host deb.debian.org.lo:172.16.0.1 \
-              --add-host security.debian.org.lo:172.16.0.1 \
-              --add-host snapshot.debian.org.lo:172.16.0.1 \
-              --platform $platforms \
-              --tag satantime/puppeteer-node:$tag --push . && \
+            $(
+              docker buildx build \
+                ${digestBuildX} \
+                --cache-to type=local,dest=./buildx-data \
+                --add-host archive.debian.org.lo:172.16.0.1 \
+                --add-host deb.debian.org.lo:172.16.0.1 \
+                --add-host security.debian.org.lo:172.16.0.1 \
+                --add-host snapshot.debian.org.lo:172.16.0.1 \
+                --platform $platforms \
+                --tag satantime/puppeteer-node:$tag --push .
+            ) && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
             digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
+            currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5) && \
+            echo "${digestBuildX}" > "./buildx-data/index/${currentBuildFile}" && \
             rm Dockerfile
             code="${?}"
             if [[ -f "hashes/${tag}.error" ]]; then
