@@ -1,0 +1,24 @@
+debug = true
+[registry."docker.io"]
+  mirrors = ["172.16.0.1:5000"]
+
+[registry."172.16.0.1:5000"]
+  http = true
+  insecure = true
+
+[history]
+  maxAge = 2592000
+  maxEntries = 1000
+
+[worker.containerd]
+  namespace = "puppeteer-node"
+  platforms = [
+    "linux/386*",
+    "linux/amd64*",
+    "linux/arm*",
+    "linux/arm64*",
+    "linux/mips64*",
+    "linux/ppc64le*",
+    "linux/riscv64*",
+    "linux/s390x*",
+  ]
