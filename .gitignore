@@ -1,5 +1,6 @@
 /.env
 /.url
 /Dockerfile
-/mirror-data
 /buildx-data
+/mirror-data
+/registry-data

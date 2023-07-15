@@ -1,12 +1,1 @@
-.dockerignore
-.git
-.gitignore
-.url
-Docker.template
-LICENSE
-README.md
-build.sh
-hashes
-mirror
-mirror-data
-buildx-data
+*

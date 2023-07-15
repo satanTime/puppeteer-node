@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+
   debian:
     build:
       context: ./mirror
@@ -9,3 +10,14 @@ services:
     volumes:
     - ./mirror-data:/mirror
     - ./mirror-data/cache:/var/cache/nginx
+
+  registry:
+    image: registry:2.8.2
+    environment:
+      - REGISTRY_PROXY_REMOTEURL="https://registry-1.docker.io"
+      - REGISTRY_PROXY_USERNAME=${DOCKER_HUB_USERNAME}
+      - REGISTRY_PROXY_PASSWORD=${DOCKER_HUB_ACCESS_TOKEN}
+    ports:
+      - 172.16.0.1:5000:5000
+    volumes:
+      - ./registry-data:/var/lib/registry

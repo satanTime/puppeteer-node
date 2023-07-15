@@ -1,37 +1,54 @@
 #!/bin/bash
 
-detectVersion () {
-    # detection the major version of the image
-    version=""
-    if [[ "${version}" == "" ]] && [[ -f hashes/$1 ]] && [[ "$2" == "" ]]; then
-        version=$(cat hashes/$1 | grep 'version' | sed -e 's/^version://')
-    fi
-    if [[ "${version}" == "" ]]; then
-     docker image pull node:$1 > /dev/null
-        version=$(
-            docker run --rm node:$1 cat /etc/os-release | \
-            grep 'VERSION=' | \
-            grep -oE '\(.*\)' | \
-            grep -oE '\w+' || \
-            echo ''
-        )
-    fi
-    if [[ "${version}" == "" ]]; then
-     docker image pull node:$1 > /dev/null
-        version=$(
-            docker run --rm node:$1 cat /etc/os-release | \
-            grep 'PRETTY_NAME=' | \
-            grep -oE '\w+/\w+"' | \
-            grep -oE '\w+/' | \
-            grep -oE '\w+' || \
-            echo ''
-        )
-    fi
-    if [[ "${version}" == "" ]]; then
-        version=$(cat hashes/$1 | grep 'version' | sed -e 's/^version://')
-    fi
+versions=$(
+  echo 'bookworm' && \
+  echo 'bullseye' && \
+  echo 'buster' && \
+  echo 'stretch' && \
+  echo 'jessie' && \
+  echo 'wheezy'
+)
 
-    echo $version
+detectVersion () {
+  # detection the major version of the image
+  version=""
+  if [[ "${version}" == "" ]] && [[ -f hashes/$1 ]] && [[ "$2" == "" ]]; then
+    version=$(cat hashes/$1 | grep 'version' | sed -e 's/^version://')
+  fi
+  if [[ "${version}" == "" ]]; then
+    for possibleVersion in $versions; do
+      if [[ $1 == *"${possibleVersion}"* ]]; then
+        version="${possibleVersion}"
+      fi
+    done
+  fi
+
+  if [[ "${version}" == "" ]]; then
+   docker image pull node:$1 > /dev/null
+    version=$(
+      docker run --rm node:$1 cat /etc/os-release | \
+      grep 'VERSION=' | \
+      grep -oE '\(.*\)' | \
+      grep -oE '\w+' || \
+      echo ''
+    )
+  fi
+  if [[ "${version}" == "" ]]; then
+   docker image pull node:$1 > /dev/null
+      version=$(
+        docker run --rm node:$1 cat /etc/os-release | \
+        grep 'PRETTY_NAME=' | \
+        grep -oE '\w+/\w+"' | \
+        grep -oE '\w+/' | \
+        grep -oE '\w+' || \
+        echo ''
+      )
+  fi
+  if [[ "${version}" == "" ]]; then
+    version=$(cat hashes/$1 | grep 'version' | sed -e 's/^version://')
+  fi
+
+  echo $version
 }
 
 detectDockerfile () {
@@ -56,14 +73,7 @@ fi
 tagsInclude=""
 if [[ $URL == "" ]]; then
     URL=https://registry.hub.docker.com/v2/repositories/library/node/tags
-    tagsInclude=$(
-      echo 'bookworm' && \
-      echo 'bullseye' && \
-      echo 'buster' && \
-      echo 'stretch' && \
-      echo 'jessie' && \
-      echo 'wheezy'
-    )
+    tagsInclude="${versions}"
 fi
 
 while [[ $URL != "" ]]; do
@@ -200,6 +210,7 @@ while [[ $URL != "" ]]; do
             cat $dockerfile >> Dockerfile && \
             $(
               docker buildx build \
+                --builder puppeteer-node \
                 ${digestBuildX} \
                 --cache-to type=local,dest=./buildx-data \
                 --add-host archive.debian.org.lo:172.16.0.1 \
