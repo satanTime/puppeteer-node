@@ -225,7 +225,7 @@ while [[ $URL != "" ]]; do
                   --platform $platforms \
                   --tag satantime/puppeteer-node:$tag --push .
               )
-            elif [[ "${tagType}" == "unrecognized" ]]; then
+            elif [[ "${tagType}" == "unrecognized" ]] || [[ -z "${tagType}" ]]; then
               docker build \
                 --add-host archive.debian.org.lo:172.16.0.1 \
                 --add-host deb.debian.org.lo:172.16.0.1 \
