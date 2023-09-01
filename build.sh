@@ -161,6 +161,9 @@ while [[ $URL != "" ]]; do
         if [[ "${platforms}" == "" ]]; then
           platforms="linux/amd64"
         fi
+        tagType=$(
+          echo $content | jq -r .content_type
+        )
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
         digestBuildX=""
@@ -208,19 +211,33 @@ while [[ $URL != "" ]]; do
 
             echo "FROM node:${tag}" > Dockerfile && \
             cat $dockerfile >> Dockerfile && \
-            $(
-              docker buildx build \
-                --builder puppeteer-node \
-                ${digestBuildX} \
-                --cache-to type=local,dest=./buildx-data \
+            if [[ "${tagType}" == "image" ]]; then
+              $(
+                docker buildx build \
+                  --builder puppeteer-node \
+                  ${digestBuildX} \
+                  --cache-to type=local,dest=./buildx-data \
+                  --add-host archive.debian.org.lo:172.16.0.1 \
+                  --add-host deb.debian.org.lo:172.16.0.1 \
+                  --add-host httpredir.debian.org.lo:172.16.0.1 \
+                  --add-host security.debian.org.lo:172.16.0.1 \
+                  --add-host snapshot.debian.org.lo:172.16.0.1 \
+                  --platform $platforms \
+                  --tag satantime/puppeteer-node:$tag --push .
+              )
+            elif [[ "${tagType}" == "unrecognized" ]]; then
+              docker build \
                 --add-host archive.debian.org.lo:172.16.0.1 \
                 --add-host deb.debian.org.lo:172.16.0.1 \
                 --add-host httpredir.debian.org.lo:172.16.0.1 \
                 --add-host security.debian.org.lo:172.16.0.1 \
                 --add-host snapshot.debian.org.lo:172.16.0.1 \
-                --platform $platforms \
-                --tag satantime/puppeteer-node:$tag --push .
-            ) && \
+                --tag satantime/puppeteer-node:$tag .
+              docker push satantime/puppeteer-node:$tag
+            else
+              echo "Unknown tagType: ${tagType}"
+              exit 1
+            fi && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
             digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
