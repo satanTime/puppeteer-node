@@ -219,6 +219,7 @@ while [[ $URL != "" ]]; do
                   --cache-to type=local,dest=./buildx-data \
                   --add-host archive.debian.org.lo:172.16.0.1 \
                   --add-host deb.debian.org.lo:172.16.0.1 \
+                  --add-host http.debian.net:172.16.0.1 \
                   --add-host httpredir.debian.org.lo:172.16.0.1 \
                   --add-host security.debian.org.lo:172.16.0.1 \
                   --add-host snapshot.debian.org.lo:172.16.0.1 \
@@ -229,6 +230,7 @@ while [[ $URL != "" ]]; do
               docker build \
                 --add-host archive.debian.org.lo:172.16.0.1 \
                 --add-host deb.debian.org.lo:172.16.0.1 \
+                --add-host http.debian.net:172.16.0.1 \
                 --add-host httpredir.debian.org.lo:172.16.0.1 \
                 --add-host security.debian.org.lo:172.16.0.1 \
                 --add-host snapshot.debian.org.lo:172.16.0.1 \
