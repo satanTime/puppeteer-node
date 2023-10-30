@@ -6,7 +6,7 @@ services:
     build:
       context: ./mirror
     ports:
-    - 172.16.0.1:80:80
+    - 80:80
     volumes:
     - ./mirror-data:/mirror
     - ./mirror-data/cache:/var/cache/nginx
@@ -18,6 +18,6 @@ services:
       - REGISTRY_PROXY_USERNAME=${DOCKER_HUB_USERNAME}
       - REGISTRY_PROXY_PASSWORD=${DOCKER_HUB_ACCESS_TOKEN}
     ports:
-      - 172.16.0.1:5000:5000
+      - 5000:5000
     volumes:
       - ./registry-data:/var/lib/registry
