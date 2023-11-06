@@ -166,7 +166,7 @@ jobs:
   build:
     docker:
       # replace 20.9.0-bookworm here with the version of node you need
-      - image: satantime/puppeteer-node:16.15.1
+      - image: satantime/puppeteer-node:20.9.0-bookworm
     steps:
       - checkout
       - restore_cache:
