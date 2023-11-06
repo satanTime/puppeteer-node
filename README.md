@@ -10,6 +10,21 @@ because different versions of different libraries, such as [webdriver](https://w
 specific versions of [Chrome Browser](https://www.chromium.org/Home/).
 This makes tough providing images for all possible combinations.
 
+## Example
+
+For example, if you want to use [puppeteer](https://pptr.dev) with `node` `v20.9.0` on `bookworm`, which means base image is `node:20.9.0-bookworm`, then you only need to replace `node` with `satantime/puppeteer-node`:
+
+#### Dockerfile
+```Dockerfile
+FROM satantime/puppeteer-node:20.9.0-bookworm
+```
+#### compose.yml
+```yaml
+services:
+  service-name:
+    image: satantime/puppeteer-node:20.9.0-bookworm
+```
+
 ## Warnings
 
 - no alpine images

@@ -115,10 +115,16 @@ exports.config = {
 
 ## Configure BitBucket pipelines
 
-An example of `bitbucket-pipelines.yml` how to run unit and e2e tests.
+Let's assume you want to use [puppeteer](https://pptr.dev)
+with `node` `v20.9.0` on `bookworm`,
+which means base image is `node:20.9.0-bookworm`,
+then you only need to replace `node` with `satantime/puppeteer-node`.
+
+An example of `bitbucket-pipelines.yml` how to run unit and e2e tests:
 
 ```yaml
-image: satantime/puppeteer-node:16.15.1 # put here version you need
+# replace 20.9.0-bookworm here with the version of node you need
+image: satantime/puppeteer-node:20.9.0-bookworm
 
 pipelines:
   default:
@@ -147,6 +153,11 @@ pipelines:
 
 ## Configure CircleCI
 
+Let's assume you want to use [puppeteer](https://pptr.dev)
+with `node` `v20.9.0` on `bookworm`,
+which means base image is `node:20.9.0-bookworm`,
+then you only need to replace `node` with `satantime/puppeteer-node`.
+
 An example of `.circleci/config.yml` how to run unit and e2e tests.
 
 ```yaml
@@ -154,7 +165,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      # put here version you need
+      # replace 20.9.0-bookworm here with the version of node you need
       - image: satantime/puppeteer-node:16.15.1
     steps:
       - checkout
@@ -216,12 +227,14 @@ Then update `.circleci/config.yml` with a new step for `IE`:
 version: 2.1
 orbs:
   # important to add
-  win: circleci/windows@2.4.0
+  windows: circleci/windows@5.0.0
 jobs:
   # important to add
   IE:
     executor:
-      name: win/default
+      name: windows/server-2019
+      size: medium
+      shell: bash.exe
     steps:
       - checkout
       - restore_cache:
@@ -229,9 +242,9 @@ jobs:
       - run:
           name: NPM Install
           command: |
-            if ((Test-Path "node_modules") -ne "True") {
+            if [ ! -d "e2e/a5es5/node_modules/" ]; then
               npm ci --no-optional --ignore-scripts
-            }
+            fi
       - save_cache:
           key: root-{{ arch }}
           paths:
