@@ -90,7 +90,8 @@ while [[ $URL != "" ]]; do
         echo $content | \
         grep -oE '"next":"https://registry.hub.docker.com/v2/[^"]+"' | \
         sed -e 's/^"next":"//' | \
-        sed -e 's/"$//'
+        sed -e 's/"$//' | \
+        sed -e 's/\\u0026/\&/'
     )
     tags=$(
         echo "${tagsInclude}" && \
