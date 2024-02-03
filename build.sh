@@ -263,20 +263,18 @@ while [[ $URL != "" ]]; do
             fi && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
             digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
-            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}")
-
-            currentBuildFile=""
+            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
+            currentBuildFile="" && \
             if [[ "$(which md5)" != "" ]]; then
               currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
-            fi
+            fi && \
             if [[ "$(which md5sum)" != "" ]]; then
               currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5sum | grep -oE '^[^ ]+')
-            fi
+            fi && \
             if [[ "${currentBuildFile}" == "" ]]; then
               echo "Cannot calculate md5 sum for the template"
               exit 1
-            fi
-
+            fi && \
             echo "${digestBuildX}" > "./buildx-data/index/${currentBuildFile}" && \
             rm Dockerfile
             code="${?}"
