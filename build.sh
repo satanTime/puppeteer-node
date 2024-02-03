@@ -173,7 +173,17 @@ while [[ $URL != "" ]]; do
             digestOld=$(echo "${digestOld}" | sed -E '/buildx\:/d')
         fi
         if [[ "${digestCurrent}" != "" ]]; then
-            currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
+            currentBuildFile=""
+            if [[ "$(which md5)" != "" ]]; then
+              currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
+            fi
+            if [[ "$(which md5sum)" != "" ]]; then
+              currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5sum | grep -oE '^[^ ]+')
+            fi
+            if [[ "${currentBuildFile}" == "" ]]; then
+              echo "Cannot calculate md5 sum for the digestCurrent"
+              exit 1
+            fi
             if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
                 digestBuildX=$(
                     echo "${digestBuildX}" && \
@@ -182,7 +192,17 @@ while [[ $URL != "" ]]; do
             fi
         fi
         if [[ "${digestOld}" != "" ]]; then
-            currentBuildFile=$(echo "${digestOld}" | grep -oE '^sha256:.*$' | md5)
+            currentBuildFile=""
+            if [[ "$(which md5)" != "" ]]; then
+              currentBuildFile=$(echo "${digestOld}" | grep -oE '^sha256:.*$' | md5)
+            fi
+            if [[ "$(which md5sum)" != "" ]]; then
+              currentBuildFile=$(echo "${digestOld}" | grep -oE '^sha256:.*$' | md5sum | grep -oE '^[^ ]+')
+            fi
+            if [[ "${currentBuildFile}" == "" ]]; then
+              echo "Cannot calculate md5 sum for the digestOld"
+              exit 1
+            fi
             if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
                 digestBuildX=$(
                     echo "${digestBuildX}" && \
@@ -243,8 +263,20 @@ while [[ $URL != "" ]]; do
             fi && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
             digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
-            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
-            currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5) && \
+            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}")
+
+            currentBuildFile=""
+            if [[ "$(which md5)" != "" ]]; then
+              currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
+            fi
+            if [[ "$(which md5sum)" != "" ]]; then
+              currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5sum | grep -oE '^[^ ]+')
+            fi
+            if [[ "${currentBuildFile}" == "" ]]; then
+              echo "Cannot calculate md5 sum for the template"
+              exit 1
+            fi
+
             echo "${digestBuildX}" > "./buildx-data/index/${currentBuildFile}" && \
             rm Dockerfile
             code="${?}"
