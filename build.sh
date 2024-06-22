@@ -147,6 +147,7 @@ while [[ $URL != "" ]]; do
             grep -oE '"architecture":"[^"]+"' | \
             sed -e 's/^"architecture":"//' | \
             sed -e 's/"$//' | \
+            sed '/unknown/d' | \
             sort | \
             uniq
         )
