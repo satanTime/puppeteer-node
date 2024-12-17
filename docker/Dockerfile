@@ -128,6 +128,7 @@ RUN version=$( \
         libxtst6 \
         lsb-release \
         wget \
+        xz-utils \
     && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoremove && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoclean && \
