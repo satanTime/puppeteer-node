@@ -10,11 +10,13 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
     cat /etc/apt/sources.list && \
     apt-get -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::Check-Valid-Until=false install -y --force-yes --no-install-recommends \
+        bzip2 \
         ca-certificates \
         fonts-liberation \
         gconf-service \
         libasound2 \
         libatk1.0-0 \
+        libbz2-1.0 \
         libc6 \
         libcairo2 \
         libcups2 \
@@ -49,6 +51,7 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && \
         libxtst6 \
         lsb-release \
         wget \
+        xz-utils=5.1.1alpha+20120614-2 \
     && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoremove && \
     apt-get -o Acquire::Check-Valid-Until=false -y --force-yes autoclean && \

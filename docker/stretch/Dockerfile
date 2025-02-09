@@ -1,6 +1,4 @@
-RUN UPDATE_REPO="" && \
-    SECURITY_REPO="" && \
-    if [ -e /etc/apt/sources.list ]; then \
+RUN if [ -e /etc/apt/sources.list ]; then \
         cp /etc/apt/sources.list /etc/apt/sources.list.bak && \
         echo "Original sources.list:" && \
         cat /etc/apt/sources.list && \
@@ -17,21 +15,15 @@ RUN UPDATE_REPO="" && \
           cat /etc/apt/sources.list | \
             sed -E 's/\.debian\.org/.debian.org.lo/g' \
         ) && \
-        if [ "$UPDATE_REPO" = "" ]; then \
-          updatedSources=$( \
-            echo "${updatedSources}" | \
-            sed -E '/-updates/d' | \
-            sed -E '/\/updates/d' \
-          ) && \
-          true; \
-        fi && \
-        if [ "$SECURITY_REPO" = "" ]; then \
-          updatedSources=$( \
-            echo "${updatedSources}" | \
-            sed -E '/-security/d' \
-          ) && \
-          true; \
-        fi && \
+        updatedSources=$( \
+          echo "${updatedSources}" | \
+          sed -E '/-updates/d' | \
+          sed -E '/\/updates/d' \
+        ) && \
+        updatedSources=$( \
+          echo "${updatedSources}" | \
+          sed -E '/-security/d' \
+        ) && \
         echo "${updatedSources}" > /etc/apt/sources.list.polished && \
         mv /etc/apt/sources.list.polished /etc/apt/sources.list && \
         echo "Updated sources.list:" && \
@@ -45,22 +37,16 @@ RUN UPDATE_REPO="" && \
           sed -E 's/\|\|/\n/g' | \
           sed -E 's/\.debian\.org/.debian.org.lo/g' \
         ) && \
-        if [ "$UPDATE_REPO" = "" ]; then \
-          updatedSources=$( \
-            echo "${updatedSources}" | \
-            sed -E 's/Suites: ([^\s]+) \1-updates/Suites: \1/g' | \
-            sed -E '/-updates/d' \
-          ) && \
-          true; \
-        fi && \
-        if [ "$SECURITY_REPO" = "" ]; then \
-          updatedSources=$( \
-            echo "${updatedSources}" | \
-            sed -E '/debian-security/d' | \
-            sed -E '/-security/d' \
-          ) && \
-          true; \
-        fi && \
+        updatedSources=$( \
+          echo "${updatedSources}" | \
+          sed -E 's/Suites: ([^\s]+) \1-updates/Suites: \1/g' | \
+          sed -E '/-updates/d' \
+        ) && \
+        updatedSources=$( \
+          echo "${updatedSources}" | \
+          sed -E '/debian-security/d' | \
+          sed -E '/-security/d' \
+        ) && \
         echo "${updatedSources}" | sed -z 's/\n/\n\n/gm' | sed -E 's/\|/\n/g' > /etc/apt/sources.list.d/debian.sources.polished && \
         mv /etc/apt/sources.list.d/debian.sources.polished /etc/apt/sources.list.d/debian.sources && \
         echo "Updated sources.list:" && \

@@ -1,12 +1,12 @@
 #!/bin/bash
 
 versions=$(
-  echo 'bookworm' && \
-  echo 'bullseye' && \
-  echo 'buster' && \
-  echo 'stretch' && \
+  echo 'wheezy' && \
   echo 'jessie' && \
-  echo 'wheezy'
+  echo 'stretch' && \
+  echo 'buster' && \
+  echo 'bullseye' && \
+  echo 'bookworm'
 )
 
 detectVersion () {
@@ -72,8 +72,19 @@ if [[ -f .url ]]; then
 fi
 tagsInclude=""
 if [[ $URL == "" ]]; then
-    URL=https://registry.hub.docker.com/v2/repositories/library/node/tags
-    tagsInclude="${versions}"
+  URL=https://registry.hub.docker.com/v2/repositories/library/node/tags
+  for version in $versions; do
+    if [[ $version != "wheezy" ]] && [[ $version != "jessie" ]]; then
+      tagsInclude=$(
+        echo "${tagsInclude}" && \
+        echo "${version}-slim"
+      )
+    fi
+    tagsInclude=$(
+      echo "${tagsInclude}" && \
+      echo "${version}"
+    )
+  done
 fi
 
 while [[ $URL != "" ]]; do
@@ -130,6 +141,11 @@ while [[ $URL != "" ]]; do
         if [[ "${md5}" == "" ]]; then
           echo "Cannot calculate md5 sum for the template"
           exit 1
+        fi
+        updateExist=$(curl --fail -s -o /dev/null "http://deb.debian.org/debian/dists/$version-updates/Release" && echo "yes" || echo "")
+        securityExist=$(curl --fail -s -o /dev/null "http://security.debian.org/debian-security/dists/$version-security/Release" && echo "yes" || echo "")
+        if [[ "${securityExist}" == "" ]]; then
+          securityExist=$(curl --fail -s -o /dev/null "http://security.debian.org/debian-security/dists/$version/updates/Release" && echo "yes" || echo "")
         fi
 
         digestCurrent=$(
@@ -228,11 +244,16 @@ while [[ $URL != "" ]]; do
 
             echo Tag: $tag
             echo Version: $version
+            echo Update Repo: $updateExist
+            echo Security Repo: $securityExist
             echo Dockerfile: $dockerfile
             echo Caches: $digestBuildX
 
             echo "FROM node:${tag}" > Dockerfile && \
-            cat $dockerfile >> Dockerfile && \
+            cat $dockerfile \
+              | sed -e "s/UPDATE_REPO=\"\"/UPDATE_REPO=\"${updateExist}\"/" \
+              | sed -e "s/SECURITY_REPO=\"\"/SECURITY_REPO=\"${securityExist}\"/" \
+              >> Dockerfile && \
             if [[ "${tagType}" == "image" ]]; then
               $(
                 docker buildx build \
