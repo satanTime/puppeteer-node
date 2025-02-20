@@ -24,9 +24,9 @@ detectVersion () {
   fi
 
   if [[ "${version}" == "" ]]; then
-   docker image pull node:$1 > /dev/null
+   docker image pull --platform linux/amd64 node:$1 > /dev/null
     version=$(
-      docker run --rm node:$1 cat /etc/os-release | \
+      docker run --rm --platform linux/amd64 node:$1 cat /etc/os-release | \
       grep 'VERSION=' | \
       grep -oE '\(.*\)' | \
       grep -oE '\w+' || \
@@ -34,9 +34,9 @@ detectVersion () {
     )
   fi
   if [[ "${version}" == "" ]]; then
-   docker image pull node:$1 > /dev/null
+   docker image pull --platform linux/amd64 node:$1 > /dev/null
       version=$(
-        docker run --rm node:$1 cat /etc/os-release | \
+        docker run --rm --platform linux/amd64 node:$1 cat /etc/os-release | \
         grep 'PRETTY_NAME=' | \
         grep -oE '\w+/\w+"' | \
         grep -oE '\w+/' | \
@@ -84,6 +84,13 @@ if [[ $URL == "" ]]; then
       echo "${tagsInclude}" && \
       echo "${version}"
     )
+    if [[ $version == "jessie" ]]; then
+      tagsInclude=$(
+        echo "${tagsInclude}" && \
+        echo "dubnium-${version}-slim" && \
+        echo "dubnium-${version}"
+      )
+    fi
   done
 fi
 
@@ -98,18 +105,15 @@ while [[ $URL != "" ]]; do
     done
 
     URL=$(
-        echo $content | \
-        grep -oE '"next":"https://registry.hub.docker.com/v2/[^"]+"' | \
-        sed -e 's/^"next":"//' | \
-        sed -e 's/"$//' | \
-        sed -e 's/\\u0026/\&/'
+        echo $content | jq -r .next
     )
+    if [[ "${URL}" == "null" ]]; then
+      URL=""
+    fi
     tags=$(
         echo "${tagsInclude}" && \
         echo $content | \
-        grep -oE '"name":"[^"]+"' | \
-        sed -e 's/^"name":"//' | \
-        sed -e 's/"$//' | \
+        jq -r '.results[].name' | \
         grep -v 'alpine' | \
         grep -v 'onbuild'
     )
@@ -122,6 +126,28 @@ while [[ $URL != "" ]]; do
             exitCode=$?
             echo "$exitCode - https://registry.hub.docker.com/v2/repositories/library/node/tags/$tag"
         done
+
+        mediaType=$(
+          echo $content | jq -r .media_type
+        )
+        if [[ "${mediaType:0:48}" == "application/vnd.docker.distribution.manifest.v1+" ]]; then
+          continue;
+        fi
+
+        digestCurrent=$(
+          echo $content | \
+          jq -r '.digest, .images[].digest' | \
+          sed '/^null$/d' | \
+          sort | \
+          uniq
+        )
+        tagStatus=$(
+          echo $content | \
+          jq -r '.tag_status'
+        )
+        if [[ "${digestCurrent}" == "" ]] && [[ "${tagStatus}" == "inactive" ]]; then
+          continue;
+        fi
 
         version=$(detectVersion $tag)
         dockerfile=$(detectDockerfile $version)
@@ -149,29 +175,20 @@ while [[ $URL != "" ]]; do
         fi
 
         digestCurrent=$(
-            echo $content | \
-            grep -oE '"digest":"[^"]+"' | \
-            sed -e 's/^"digest":"//' | \
-            sed -e 's/"$//' | \
-            sort | \
-            uniq && \
+            echo "${digestCurrent}" && \
             echo dockerfile:${md5} && \
             echo version:${version}
         )
         platforms=$(
-            echo $content | \
-            grep -oE '"architecture":"[^"]+"' | \
-            sed -e 's/^"architecture":"//' | \
-            sed -e 's/"$//' | \
-            sed '/unknown/d' | \
-            sort | \
-            uniq
-        )
-        platforms=$(
-            echo "$platforms" | \
-            sed -e 's/^/linux\//' | \
-            tr '\n' ',' | \
-            sed -e 's/,$//'
+          echo $content | \
+          jq -r '.images[] | (.os + "/" + .architecture + "/" + .variant)' | \
+          sed '/unknown/d' | \
+          sed 's/\/$//' | \
+          sed 's/^\//linux\//' | \
+          sort | \
+          uniq | \
+          tr '\n' ',' | \
+          sed -e 's/,$//'
         )
         if [[ "${platforms}" == "linux/" ]]; then
           platforms="linux/amd64"
@@ -179,14 +196,14 @@ while [[ $URL != "" ]]; do
         if [[ "${platforms}" == "" ]]; then
           platforms="linux/amd64"
         fi
-        tagType=$(
+        contentType=$(
           echo $content | jq -r .content_type
         )
 
         digestOld=$(cat hashes/$tag 2> /dev/null)
-        digestBuildX=""
+        buildArgs=""
         if [[ "${digestOld}" != "" ]]; then
-            digestBuildX=$(echo "${digestOld}" | grep 'buildx:' | sed -E 's/^buildx\:/--cache-from type=local,src=.\/buildx-data,digest=/g')
+            buildArgs=$(echo "${digestOld}" | grep 'buildx:' | sed -E 's/^buildx\:/--cache-from type=local,src=.\/buildx-data,digest=/g')
             digestOld=$(echo "${digestOld}" | sed -E '/buildx\:/d')
         fi
         if [[ "${digestCurrent}" != "" ]]; then
@@ -202,8 +219,8 @@ while [[ $URL != "" ]]; do
               exit 1
             fi
             if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
-                digestBuildX=$(
-                    echo "${digestBuildX}" && \
+                buildArgs=$(
+                    echo "${buildArgs}" && \
                     echo "--cache-from type=local,src=./buildx-data,digest=$(cat ./buildx-data/index/${currentBuildFile})"
                 )
             fi
@@ -221,11 +238,20 @@ while [[ $URL != "" ]]; do
               exit 1
             fi
             if [[ -f "./buildx-data/index/${currentBuildFile}" ]]; then
-                digestBuildX=$(
-                    echo "${digestBuildX}" && \
+                buildArgs=$(
+                    echo "${buildArgs}" && \
                     echo "--cache-from type=local,src=./buildx-data,digest=$(cat ./buildx-data/index/${currentBuildFile})"
                 )
             fi
+        fi
+        buildArgs=$(
+          echo "${buildArgs}" && \
+          echo "--cache-to type=local,dest=./buildx-data"
+        )
+        buildCommand="docker buildx build --builder puppeteer-node"
+        if [[ "${contentType}" != "image" ]]; then
+          buildCommand="docker --context=default buildx build" && \
+          buildArgs=""
         fi
 
         if [[ "${digestOld}" != "" ]] && [[ "$(echo "$digestOld" | grep version:)" == "" ]]; then
@@ -244,48 +270,33 @@ while [[ $URL != "" ]]; do
 
             echo Tag: $tag
             echo Version: $version
+            echo Platforms: $platforms
             echo Update Repo: $updateExist
             echo Security Repo: $securityExist
             echo Dockerfile: $dockerfile
-            echo Caches: $digestBuildX
+            echo Command: $buildCommand
+            echo Args: $buildArgs
 
             echo "FROM node:${tag}" > Dockerfile && \
             cat $dockerfile \
               | sed -e "s/UPDATE_REPO=\"\"/UPDATE_REPO=\"${updateExist}\"/" \
               | sed -e "s/SECURITY_REPO=\"\"/SECURITY_REPO=\"${securityExist}\"/" \
               >> Dockerfile && \
-            if [[ "${tagType}" == "image" ]]; then
-              $(
-                docker buildx build \
-                  --builder puppeteer-node \
-                  ${digestBuildX} \
-                  --cache-to type=local,dest=./buildx-data \
-                  --add-host archive.debian.org.lo:172.16.0.1 \
-                  --add-host deb.debian.org.lo:172.16.0.1 \
-                  --add-host http.debian.net:172.16.0.1 \
-                  --add-host httpredir.debian.org.lo:172.16.0.1 \
-                  --add-host security.debian.org.lo:172.16.0.1 \
-                  --add-host snapshot.debian.org.lo:172.16.0.1 \
-                  --platform $platforms \
-                  --tag satantime/puppeteer-node:$tag --push .
-              )
-            elif [[ "${tagType}" == "unrecognized" ]] || [[ -z "${tagType}" ]]; then
-              docker build \
+            $(
+               CONTAINERD_ENABLE_DEPRECATED_PULL_SCHEMA_1_IMAGE=1 ${buildCommand} ${buildArgs} \
                 --add-host archive.debian.org.lo:172.16.0.1 \
                 --add-host deb.debian.org.lo:172.16.0.1 \
                 --add-host http.debian.net:172.16.0.1 \
                 --add-host httpredir.debian.org.lo:172.16.0.1 \
                 --add-host security.debian.org.lo:172.16.0.1 \
                 --add-host snapshot.debian.org.lo:172.16.0.1 \
-                --tag satantime/puppeteer-node:$tag .
-              docker push satantime/puppeteer-node:$tag
-            else
-              echo "Unknown tagType: ${tagType}"
-              exit 1
-            fi && \
+                --platform $platforms \
+                --allow network.host \
+                --tag satantime/puppeteer-node:$tag --push .
+            ) && \
             digestCurrent=$(echo "${digestCurrent}" | sed -E '/version:/d' && echo "version:${version}") && \
-            digestBuildX=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
-            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${digestBuildX}") && \
+            buildArgs=$(cat ./buildx-data/index.json | jq -r '.manifests[].digest') && \
+            digestCurrent=$(echo "${digestCurrent}" | sed -E '/buildx:/d' && echo "buildx:${buildArgs}") && \
             currentBuildFile="" && \
             if [[ "$(which md5)" != "" ]]; then
               currentBuildFile=$(echo "${digestCurrent}" | grep -oE '^sha256:.*$' | md5)
@@ -297,7 +308,7 @@ while [[ $URL != "" ]]; do
               echo "Cannot calculate md5 sum for the template"
               exit 1
             fi && \
-            echo "${digestBuildX}" > "./buildx-data/index/${currentBuildFile}" && \
+            echo "${buildArgs}" > "./buildx-data/index/${currentBuildFile}" && \
             rm Dockerfile
             code="${?}"
             if [[ -f "hashes/${tag}.error" ]]; then

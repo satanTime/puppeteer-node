@@ -55,13 +55,13 @@ RUN if [ -e /etc/apt/sources.list ]; then \
     fi && \
     apt-get -o Acquire::Check-Valid-Until=false update && \
     apt-get -o Acquire::Check-Valid-Until=false install -y --force-yes --no-install-recommends \
-        bzip2 \
+        bzip2=1.0.6-7+b3 \
         ca-certificates \
         fonts-liberation \
         gconf-service \
         libasound2 \
         libatk1.0-0 \
-        libbz2-1.0 \
+        libbz2-1.0=1.0.6-7+b3 \
         libc6 \
         libcairo2 \
         libcups2 \
