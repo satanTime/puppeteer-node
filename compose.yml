@@ -10,7 +10,7 @@ services:
     - ./mirror-data/cache:/var/cache/nginx
 
   registry:
-    image: registry:2.8.3
+    image: registry:3.0.0
     environment:
       - REGISTRY_PROXY_REMOTEURL="https://registry-1.docker.io"
       - REGISTRY_PROXY_USERNAME=${DOCKER_HUB_USERNAME}
