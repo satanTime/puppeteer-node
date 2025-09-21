@@ -1,0 +1,14 @@
+services:
+
+  staging:
+    build:
+      context: .
+      network: host
+      extra_hosts:
+        - "archive.debian.org.lo:172.16.0.1"
+        - "deb.debian.org.lo:172.16.0.1"
+        - "http.debian.net:172.16.0.1"
+        - "httpredir.debian.org.lo:172.16.0.1"
+        - "security.debian.org.lo:172.16.0.1"
+        - "snapshot.debian.org.lo:172.16.0.1"
+    platform: linux/amd64

@@ -72,6 +72,7 @@ RUN UPDATE_REPO="" && \
         bzip2 \
         ca-certificates \
         fonts-liberation \
+        gconf-service \
         libasound2 \
         libatk1.0-0 \
         libbz2-1.0 \
@@ -83,7 +84,8 @@ RUN UPDATE_REPO="" && \
         libfontconfig1 \
         libgbm1 \
         libgcc1 \
-        libgdk-pixbuf-2.0-0 \
+        libgconf-2-4 \
+        libgdk-pixbuf2.0-0 \
         libglib2.0-0 \
         libgtk-3-0 \
         libnspr4 \

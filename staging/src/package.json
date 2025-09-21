@@ -1,0 +1,9 @@
+{
+  "name": "@help-me-mom/puppeteer-node",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@types/node": "24.5.2",
+    "rebrowser-puppeteer": "24.8.1"
+  }
+}
