@@ -1,12 +1,13 @@
 #!/bin/bash
 
 versions=$(
-  echo 'wheezy' && \
-  echo 'jessie' && \
-  echo 'stretch' && \
-  echo 'buster' && \
+  echo 'trixie' && \
+  echo 'bookworm' && \
   echo 'bullseye' && \
-  echo 'bookworm'
+  echo 'buster' && \
+  echo 'stretch' && \
+  echo 'jessie' && \
+  echo 'wheezy'
 )
 
 detectVersion () {

@@ -4,3 +4,5 @@
 /buildx-data
 /mirror-data
 /registry-data
+/staging/Dockerfile
+/staging/src/node_modules
