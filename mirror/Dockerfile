@@ -1,3 +1,3 @@
-FROM nginx:1.28.0
+FROM nginx:1.28.1
 
 COPY ./etc/ /etc/
