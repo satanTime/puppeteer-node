@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@types/node": "24.10.4",
+    "@types/node": "24.10.7",
     "rebrowser-puppeteer": "24.8.1"
   }
 }
