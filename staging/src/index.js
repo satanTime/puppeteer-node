@@ -1,9 +1,20 @@
-import puppeteer from "rebrowser-puppeteer";
+import puppeteer from "puppeteer";
+
+async function launchChrome(options) {
+  try {
+    return await puppeteer.launch(options);
+  } catch {
+    return await puppeteer.launch({
+      ...options,
+      executablePath: "/root/.cache/puppeteer/chrome/chrome-linux64/chrome",
+    });
+  }
+}
 
 (async () => {
   {
-    const browser = await puppeteer.launch({
-      product: 'chrome',
+    const browser = await launchChrome({
+      browser: 'chrome',
       headless: true,
       defaultViewport: {
         width: 1920,
@@ -21,7 +32,7 @@ import puppeteer from "rebrowser-puppeteer";
 
   {
     const browser = await puppeteer.launch({
-      product: 'firefox',
+      browser: 'firefox',
       headless: true,
       defaultViewport: {
         width: 1920,

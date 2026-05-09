@@ -182,7 +182,6 @@ bash -n init-buildx.sh
 bash -n init.sh
 bash -n push.sh
 bash -n staging/index.sh
-bash -n staging/src/index.sh
 ```
 
 For Docker dependency changes, run the staging smoke test above. This
