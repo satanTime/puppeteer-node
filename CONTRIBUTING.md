@@ -1,20 +1,30 @@
-## lo alias
+## Loopback alias
 
-Linux
-> ip addr add 172.16.0.1/32 dev lo label lo:1
+Linux:
 
-Mac
-> /sbin/ifconfig lo0 alias 172.16.0.1
+```sh
+ip addr add 172.16.0.1/32 dev lo label lo:1
+```
 
-## mount
+macOS:
 
-Linux
-> sshfs -o allow_other root@192.168.50.83:/Volumes/TB5 /home/michael/TB5
+```sh
+/sbin/ifconfig lo0 alias 172.16.0.1
+```
 
-## staging
+## Mount
 
-if you need to debug to ensure that current build works well,
-use the next command:
+Linux:
 
-> cd staging 
-> sh index.sh trixie-slim 
+```sh
+sshfs -o allow_other root@192.168.50.83:/Volumes/TB5 /home/michael/TB5
+```
+
+## Staging
+
+To debug and verify the current build, run:
+
+```sh
+cd staging
+sh index.sh trixie-slim
+```

@@ -1,18 +1,18 @@
 # Puppeteer Node for CI
 
-The motivation of this repo is to provide all versions of [nodejs images](https://hub.docker.com/_/node) with a single layer on top
-that contains only dependencies for [puppeteer](https://pptr.dev).
+The purpose of this repository is to provide all versions of the official [Node.js images](https://hub.docker.com/_/node) with a single additional layer
+that contains only the dependencies required by [Puppeteer](https://pptr.dev).
 
-Therefore, which [puppeteer](https://pptr.dev) to install and to use is up to you, it is just one line of code.
+The [Puppeteer](https://pptr.dev) version you install and use is up to you, and switching to this image requires only one line of code.
 
-[`satantime/puppeteer-node` images](https://hub.docker.com/r/satantime/puppeteer-node) do not contain [puppeteer](https://pptr.dev) itself,
-because different versions of different libraries, such as [webdriver](https://webdriver.io), might require
-specific versions of [Chrome Browser](https://www.chromium.org/Home/).
-This makes tough providing images for all possible combinations.
+[`satantime/puppeteer-node` images](https://hub.docker.com/r/satantime/puppeteer-node) do not contain [Puppeteer](https://pptr.dev) itself,
+because different versions of libraries, such as [WebdriverIO](https://webdriver.io), might require
+specific versions of [Chrome](https://www.chromium.org/Home/).
+Providing images for every possible combination would be difficult.
 
 ## Example
 
-For example, if you want to use [puppeteer](https://pptr.dev) with `node` `v20.9.0` on `bookworm`, which means base image is `node:20.9.0-bookworm`, then you only need to replace `node` with `satantime/puppeteer-node`:
+For example, if you want to use [Puppeteer](https://pptr.dev) with `node` `v20.9.0` on `bookworm`, where the base image is `node:20.9.0-bookworm`, you only need to replace `node` with `satantime/puppeteer-node`:
 
 #### Dockerfile
 ```Dockerfile
@@ -27,9 +27,9 @@ services:
 
 ## Warnings
 
-- no alpine images
-- should you not find node version you want, please open [an issue on GitHub](https://github.com/satanTime/puppeteer-node/issues/new)
+- Alpine images are not supported.
+- If you cannot find the Node.js version you need, please open [an issue on GitHub](https://github.com/satanTime/puppeteer-node/issues/new).
 
 ## Testing Angular
 
-Documentation how to configure continuous integration for Angular applications is on [https://satantime.github.io/puppeteer-node/](https://satantime.github.io/puppeteer-node/).
+Documentation for configuring continuous integration for Angular applications is available at [https://sudo.eu/1/angular-e2e-with-puppeteer/](https://sudo.eu/1/angular-e2e-with-puppeteer/).
