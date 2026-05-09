@@ -1,0 +1,78 @@
+version: 2.1
+
+executors:
+  core:
+    parameters:
+      tag:
+        description: Published puppeteer-node image tag to test
+        type: string
+    docker:
+      - image: satantime/puppeteer-node:<< parameters.tag >>
+    resource_class: medium
+
+commands:
+  puppeteer:
+    parameters:
+      tag:
+        description: Node image tag to e2e test
+        type: string
+    steps:
+      - run: date
+      - checkout
+      - run:
+          name: e2e test << parameters.tag >>
+          command: |
+            cd staging/src
+            sh test.sh
+
+jobs:
+  E2E:
+    parameters:
+      tag:
+        description: Node image tag to e2e test
+        type: string
+    executor:
+      name: core
+      tag: << parameters.tag >>
+    working_directory: /src
+    environment:
+      PUPPETEER_SKIP_DOWNLOAD: "true"
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - puppeteer:
+          tag: << parameters.tag >>
+
+workflows:
+  version: 2
+  Daily:
+    triggers:
+      - schedule:
+          cron: "0 6 * * *"
+          filters:
+            branches:
+              only:
+                - master
+
+    jobs:
+      - E2E:
+          name: << matrix.tag >>:e2e
+          tag: << matrix.tag >>
+          matrix:
+            parameters:
+              tag:
+                - latest
+                - lts
+                - lts-slim
+                - trixie
+                - trixie-slim
+                - bookworm
+                - bookworm-slim
+                - bullseye
+                - bullseye-slim
+                - buster
+                - buster-slim
+                - stretch
+                - stretch-slim
+                - jessie
+                - dubnium-jessie-slim
+                - wheezy

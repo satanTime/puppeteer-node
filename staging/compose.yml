@@ -12,3 +12,5 @@ services:
         - "security.debian.org.lo:172.16.0.1"
         - "snapshot.debian.org.lo:172.16.0.1"
     platform: linux/amd64
+    volumes:
+      - ./src:/src

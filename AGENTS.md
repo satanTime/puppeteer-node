@@ -17,6 +17,8 @@ Alpine tags are not supported.
   proxy used by builds.
 - `mirror/` contains the nginx config for the Debian package cache.
 - `staging/` is a smoke-test harness for browser launches.
+- `.circleci/config.yml` runs scheduled E2E smoke tests against
+  already-published `satantime/puppeteer-node` tags.
 - `docs/` is the GitHub Pages redirect site.
 
 Ignored local state includes `.env`, `.url`, root `Dockerfile`,
@@ -155,12 +157,15 @@ sh index.sh trixie-slim
 ```
 
 `staging/index.sh` generates ignored `staging/Dockerfile`, appends the
-generic root fragment plus `staging/docker/Dockerfile`, then runs
-`docker compose run --rm --build staging`.
+generic root fragment, sets `/src` as the working directory, and makes
+`staging/src/test.sh` the container command.
 
-The staging image installs `rebrowser-puppeteer`, downloads Chrome and
-Firefox browser builds, and runs `staging/src/index.js`. The script
-launches both products headless with `--no-sandbox` and prints:
+`staging/src/test.sh` is the shared local and CI smoke-test
+entrypoint. It installs `unzip`, installs Puppeteer from
+`staging/src/package.json`, downloads Chrome and Firefox browser
+builds, unpacks cached browser archives, and runs
+`staging/src/index.js`. The script launches both products headless
+with `--no-sandbox` and prints:
 
 ```text
 chrome success
@@ -172,6 +177,23 @@ when the runtime dependencies are sufficient.
 If a task changes a release-specific fragment, adjust staging or mimic
 `build.sh` manually so the relevant fragment is actually tested.
 
+## CircleCI
+
+CircleCI is configured only for the scheduled `Daily` workflow. It
+runs at `06:00` UTC on the `master` branch and does not define any
+commit-triggered workflow.
+
+The workflow uses a parameterized `E2E` job. Each matrix entry runs in
+the matching already-published image:
+
+```yaml
+satantime/puppeteer-node:<tag>
+```
+
+The job checks out the repository, enters `staging/src`, and runs
+`sh test.sh`. The current matrix covers alias tags, Debian codename
+tags, and the slim tags that are published for this image family.
+
 ## Validation
 
 For script-only changes, run syntax checks:
@@ -182,10 +204,15 @@ bash -n init-buildx.sh
 bash -n init.sh
 bash -n push.sh
 bash -n staging/index.sh
+sh -n staging/src/test.sh
 ```
 
 For Docker dependency changes, run the staging smoke test above. This
 requires Docker, network access, and the local mirror alias.
+
+For CircleCI config changes, parse `.circleci/config.yml` as YAML and
+check that `workflows.Daily.jobs` contains the E2E matrix. The
+CircleCI CLI can be used for full validation when available.
 
 For production build changes, inspect generated diffs carefully
 before letting `build.sh` push or commit. Prefer testing one
