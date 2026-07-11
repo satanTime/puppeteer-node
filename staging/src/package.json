@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@types/node": "24.13.2",
+    "@types/node": "24.13.3",
     "puppeteer": "25.3.0"
   }
 }
