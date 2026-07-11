@@ -4,6 +4,6 @@
   "type": "module",
   "dependencies": {
     "@types/node": "24.13.2",
-    "puppeteer": "25.1.0"
+    "puppeteer": "25.3.0"
   }
 }
